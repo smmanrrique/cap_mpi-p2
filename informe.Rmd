@@ -1,0 +1,96 @@
+---
+title: "Practica 2: Programación de Comunicaciones en MPI "
+author: "Shamuel Manrrique 802400 \\n
+         Aldrix Marfil 794976 "
+date: "08/01/2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+# COMUNICACIONES EN MPI
+
+En esta práctica se proponen algunos patrones de comunicación clásicos en paso de
+mensajes. Se pide realizar dos tareas con estos patrones:
+
+  - La primera tarea consiste en la implementación de estos patrones en lenguaje
+  C utilizando la librería de MPI disponible
+  
+  - La segunda tarea consiste en la caracterización del comportamiento de estos
+  patrones de comunicación
+
+# Hablar un poco sobre el codigo e implementacion
+
+
+los paquetes son de tipo entero(2 Bytes = 16 bits), por ende el tamaño vendra determinado por 2*n donde n es el tamaño del paquete. 
+
+
+Las salidas del programa se guadaran en un archivo .csv con las siguientes cabeceras
+```
+BCAST_TYPE   -> Type de broadcast en caso de aplicar.
+PACKET_SIZE  -> Tamaño en Bytes del paquete.
+N_PACKETS    -> Cantidad de paquete a enviar.
+n_BOUNCES    -> Numero de rebotes del paquete de un proceso a otro.
+NODE         -> Maquina donde se ejecuta el proceso.
+PROCESS      -> Identificador(Rank) del proceso.
+SRC          -> Proceso que envia el/los mensaje/s
+DST          -> Proceso que recibe el/los mensaje/s
+TAG          -> Identificador unico de parejas conectadas
+COM_TIME     -> Uso MPI_Wtime para medir el tiempo de envio y confirmacion de recepcion.
+RUNING_TIME  -> Tiempo de ejecucion del proceso en microsegundos.
+```
+
+
+
+
+## Importar librerías necesarias
+```{r setup, warning=FALSE,message=FALSE}
+library("ggplot2")
+library("dplyr")         # load
+library("RcmdrMisc")
+library("nleqslv")       # Resolver sistema ecuaciones lineales/no lineales
+```
+
+# Analisis de resultados de rendimiento
+
+## Test de latencia entre procesos en MPI
+```{r}
+latency_test <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_test.csv")
+
+# Todas las variables cuantitativas
+numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+```
+
+```{r}
+# Análisis de datos tomando en cuenta el factor TYPE 
+latency_type = latency_test$TYPE
+
+# Resumen estadístico de la variable colesterol por genero
+numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], groups=latency_type, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafica de diagrama de caja de Cholesterol~Género
+Boxplot(BOUNCE_TIME~TYPE, data=latency_test, id=list(method="y"))
+
+```
+
+
+## Test de ancho de banda 
+```{r}
+plot(cars)
+```
+
+## Test de latencia de la operacion Broadcast
+```{r}
+plot(cars)
+```
+
+df
+```{r}
+plot(cars)
+```
+df
+```{r}
+plot(cars)
+```
