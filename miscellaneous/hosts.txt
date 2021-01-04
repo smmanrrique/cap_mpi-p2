@@ -1,0 +1,2 @@
+192.210.154.32 slots=2 max_slots=4
+192.210.154.33 slots=2 max_slots=4

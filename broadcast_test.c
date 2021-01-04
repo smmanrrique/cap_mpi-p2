@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
 #include <sys/time.h>
 #include <time.h>
@@ -12,9 +13,9 @@
     #define BROADCAST 0
 #endif
 
+double t, t1, t2;
 static int packets[PACKET_SIZE];
 
-double t, t1, t2;
 
 int main( int argc, char* argv[] ) {   
     int rank, nproc, num_steps, buf;
@@ -29,9 +30,10 @@ int main( int argc, char* argv[] ) {
            buf = 777;
         }
 
-        printf("[%d]: Before Bcast, buf is %d\n", rank, buf);
-        MPI_Bcast(&buf, PACKET_SIZE, MPI_INT, 0, MPI_COMM_WORLD);
-        printf("[%d]: Before Bcast, buf is %d\n", rank, buf);
+        t1 = MPI_Wtime();
+        MPI_Bcast(packets, PACKET_SIZE, MPI_INT, 0, MPI_COMM_WORLD);
+        t1 = MPI_Wtime();
+        t  = t2 - t1;
         printf("BROADCAST DONE! Rank: %d\n", rank);       
 
     } else {

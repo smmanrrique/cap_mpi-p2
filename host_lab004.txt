@@ -1,0 +1,4 @@
+10.3.17.74 max_slots=4
+10.3.17.75 max_slots=4
+10.3.17.76 max_slots=4
+10.3.17.77 max_slots=4
