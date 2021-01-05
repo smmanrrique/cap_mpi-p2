@@ -25,20 +25,20 @@ se realizaron dos actividades con estos patrones:
 
 Para lograr los requerimientos de esta práctica se realizaron tres implementaciones:
 
-  - Test de latencia: 
-  Para esta sección se implementó el script **latency_test.c** el cual es un programa 
+  - Prueba de latencia: 
+  Para esta sección se implementó el script **latency_prueba.c** el cual es un programa 
   en MPI que mide la latencia de las comunicaciones por cada pareja asignadas a jugar 
   ping-pong(rebotar paquetes). La cantidad de envíos (rebotes) que se realizan se 
   encuentra parametrizados.
   
-  - Test de ancho de banda: 
-  Para esta sección se implementó el script **bandwidth_test.c** el cual es un programa 
+  - Prueba de ancho de banda: 
+  Para esta sección se implementó el script **bandwidth_prueba.c** el cual es un programa 
   en MPI que mide el ancho de bandas de un envío de N paquetes (a modo de ráfaga) de 
   tamaño M entre dos procesos, un emisor y un receptor que emite un ACK de validación 
   una vez recibido los N paquetes. 
   
-  - Test de latencia de la operación de broadcast: 
-  Para esta sección se implementó el script **broadcast_test.c** el cual es un programa 
+  - Prueba de latencia de la operación de broadcast: 
+  Para esta sección se implementó el script **broadcast_prueba.c** el cual es un programa 
   en MPI que tiene dos funcionalidades:
   
     1. Broadcast One-to-one:  
@@ -53,55 +53,52 @@ Para lograr los requerimientos de esta práctica se realizaron tres implementaci
 
 Caracterizar los patrones requiere obtener medidas de sus comportamientos. Para ello se 
 empleó la función MPI_Wtime con la intención de calcular las siguientes medidas:
-  tiempo de ejecución, 
-  velocidad de transferencia
-  latencia de comunicación
+  - Tiempos de ejecución, 
+  - Velocidades de transferencia
+  - Latencias de comunicación
   
-A la hora de medir los tiempos se realizaron experimentos ejecutando muchas repeticiones para 
-minimizar la influencia de valores atípicos y de la falta de resolución del medidor de tiempo 
-en las medidas.
+A la hora de medir los tiempos se realizaron experimentos ejecutando muchas repeticiones 
+para minimizar la influencia de valores atípicos y de la falta de resolución del medidor 
+de tiempo en las medidas.
 
- estos valores son bastante grandes para poder apreciar con mejor detalle las ventajas de la paralelización.
+### Pruebas realizadas
+  Se realizaron las siguientes pruebas para cada uno de las implementaciones descritas en 
+  la actividad 1:
 
+  - Prueba de latencia: 
+    * Tiempo de rebote: 
+        Por cada pareja asignada se midió el tiempo de un rebote. Esto es, por ejemplo, 
+        para la pareja 0 - 1, se midió el tiempo que tarda el paquete en ser enviado desde 
+        0 a 1 mas el tiempo del reenvío que hace 1 a 0. 
+    * Tiempo total de rebote:
+        Como el numero de rebotes puede variar, se midió el timepo total que tardan todos
+        los rebotes en ejecutarse por proceso. 
 
-# Apendice: 
+  - Prueba de ancho de banda: 
+    * Tiempo de envío de paquetes:
+        Por cada par de parejas se midió el tiempo de recepción de una ráfaga de mensajes. 
+        Esto es, por ejemplo, para la pareja 0 - 1, se midió el tiempo que tarda el proceso
+        0 en enviar una cantidad N de paquetes y luego 1 envia un paquete confirmacion al 
+        proceso 0 y se detiene la medición. 
+    * Ancho de banda:
+        Teniendo la cantidad de paquetes enviados (N), el tamaño de su tipo de datos (T) y 
+        el tiempo en segundos (E) que tarda el envío de la ráfaga hasta su confirmacion se 
+        puede calcular el ancho de banda como el maximo ancho de banda obtenido de sacar la 
+        siguiente cuenta para todos las rafagas de las parejas: Bd = (N*T) / E  
+    * Velocidad de transferencia:
+        Esta velocidad de transferencia efectiva vendria dada por la fórmula anterior pero
+        tomando el promedio de todas las cuentas Bd = (N*T) / E 
+  
+  - Prueba de latencia de la operación de broadcast: 
+      Se fijó el proceso 0 como root (es quien envia los paquetes a los otros nodos). Luego, 
+      se midió el tiempo que tardan los envios del proceso root a los otros procesos para 
+      las siguientes dos implementaciones:
+        1. Broadcast One-to-one  
+        2. Broadcast Bcast
 
-## Archivos de ejecución 
+### Análisis de resultados de rendimiento
 
-Para la ejecución de forma automatizada y parametrizada de cada uno de los script de C se crearon 
-bash scripts para automatizar los experimentos. Un ejemplo de los siguientes valores especificados 
-para la ejecución son:  
-```
-PROGRAM="name.out"         -> Nombre del archivo compilado con mpicc.
-CSV_NAME="name_test"       -> Nombre del archivo csv con los resultados.
-HOSTFILE="host_name.txt"   -> Nombre del Host File a usar
-PACKET_SIZES=(500)         -> Arreglo con los distintos tamaños del Paquete
-NUMBER_PACKETS=(1000)      -> Arreglo con los distintos número de test/ejecuciones.
-NUMBER_PROCCESS=(4 8 16)   -> Arreglo con los distintos número de procesos.
-```
-
-## Archivo resultante de las ejecuciones
-Para  facilitar el análisis de los resultados obtenidos de tiempo de ejecución, velocidad de transferencia y latencia de comunicación por cada uno de los scripts se guarda un archivo de salida .csv con las siguientes cabeceras:
-```
-BCAST_TYPE   -> Type de broadcast en caso de aplicar.
-PACKET_SIZE  -> Tamaño en Bytes del paquete.
-N_PACKETS    -> Cantidad de paquete a enviar.
-N_BOUNCES    -> Número de rebotes del paquete de un proceso a otro.
-NODE         -> Máquina donde se ejecuta el proceso.
-PROCESS      -> Identificador(Rank) del proceso.
-SRC          -> Proceso que envía el/los mensaje/s
-DST          -> Proceso que recibe el/los mensaje/s
-TAG          -> Identificador único de parejas conectadas
-COM_TIME     -> Uso MPI_Wtime para medir el tiempo de envío y confirmación de recepción.
-RUNING_TIME  -> Tiempo de ejecución del proceso.
-```
-
-Por mantener consistencia en todos los .csv dependiendo del script que se ejecute puede arrojar alguna columna vacía dado que ese dato no es requerido para ese script en particular. Por otra parte el PACKET_SIZE como se está usando tipo entero (2 Bytes = 16 bits) se multiplica el tamaño introducido por dieciséis bits para obtener la cantidad total en bits, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
-
-
-# Análisis de resultados de rendimiento
-
-## Importar librerías necesarias
+### Importar librerías necesarias
 ```{r setup, warning=FALSE,message=FALSE}
 library("ggplot2")
 library("dplyr")         # load
@@ -111,7 +108,14 @@ library("readr")
 path = "C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/"
 ```
 
-## Test de latencia entre procesos en MPI
+### Prueba de latencia entre procesos en MPI
+
+A continuación se muestran medidas sobre el tiempo de rebote de un paquete entre 
+dos nodos con la finalidad de apreciar la latencia existente:
+
+El eje X indica la cantidad de procesos usados en la prueba y el eje Y representa el 
+tiempo de rebote (en segundos).
+
 ```{r}
 # File name
 archivo = "latency_1000pkt.csv"
@@ -120,26 +124,26 @@ read_csv = paste(path,archivo , sep="")
 # Read and import csv
 latency <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_1000pkt.csv")
 
-
 numSummary(latency[,c("COM_TIME"), drop=FALSE], groups = latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"))
 
-
 sr_latency = filter(latency, TYPE==" SR" )
 numSummary(sr_latency[,c("COM_TIME"), drop=FALSE], groups = sr_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-
-# 
+ 
 Boxplot(COM_TIME~NPROC, data=sr_latency, id=list(method="y"))
 
 rs_latency = filter(latency, TYPE==" RS" )
 numSummary(rs_latency[,c("COM_TIME"), drop=FALSE], groups = rs_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
 Boxplot(COM_TIME~NPROC, data=rs_latency, id=list(method="y"))
-
 ```
 
+En la gráfica de boxplot se observan algunos valores atipicos para cada una de las 
+ejecuciones con distinta cantidad de procesos. Y en la tabla se observa que la media 
+de los tiempos de rebote es baja y que el 50% de los rebotes se tarda menos de 0.000212
+segundos.
 
-## Test de Bandwidth entre procesos en MPI 
+### Prueba de Bandwidth entre procesos en MPI 
 ```{r}
 # File name
 archivo = "bandwidth_1000pkt.csv"
@@ -149,15 +153,13 @@ read_csv = paste(path,archivo , sep="")
 bandwidth <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 
 numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-
-# 
+ 
 Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"))
 
 #sqldf("SELECT  Región, COUNT(País) AS Count FROM Dataset GROUP BY Región order by count desc")
-
 ```
 
-## Test de Broadcast entre procesos en MPI 
+### Prueba de Broadcast entre procesos en MPI 
 ```{r}
 # File name
 archivo = "broadcast_1000pkt.csv"
@@ -170,7 +172,6 @@ numSummary(broadcast[,c("COM_TIME"), drop=FALSE], groups = broadcast$NPROC, stat
 
 # Grafía de Boxplot de Homicidios por regiones
 Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"))
-
 ```
 
 
@@ -181,5 +182,43 @@ plot(cars)
 
 
 
+# Apendice: 
 
+## Archivos de ejecución 
+
+Para la ejecución de forma automatizada y parametrizada de cada uno de los script de C se crearon 
+bash scripts para automatizar los experimentos. Un ejemplo de los siguientes valores especificados 
+para la ejecución son:  
+```
+PROGRAM="name.out"         -> Nombre del archivo compilado con mpicc.
+CSV_NAME="name_prueba"     -> Nombre del archivo csv con los resultados.
+HOSTFILE="host_name.txt"   -> Nombre del Host File a usar
+PACKET_SIZES=(500)         -> Arreglo con los distintos tamaños del Paquete
+NUMBER_PACKETS=(1000)      -> Arreglo con los distintos número de prueba/ejecuciones.
+NUMBER_PROCCESS=(4 8 16)   -> Arreglo con los distintos número de procesos.
+```
+
+## Archivo resultante de las ejecuciones
+Para  facilitar el análisis de los resultados obtenidos de tiempo de ejecución, velocidad de transferencia 
+y latencia de comunicación por cada uno de los scripts se guarda un archivo de salida .csv con la
+siguiente cabecera:
+```
+BCAST_TYPE   -> Tipo de broadcast en caso de aplicar (solo aplica a los pruebas de broadcast).
+PACKET_SIZE  -> Tamaño en Bytes del paquete.
+NPROC        -> Cantidad de procesos.
+N_PACKETS    -> Cantidad de paquetes a enviar.
+N_BOUNCES    -> Número de rebotes del paquete de un proceso a otro (solo aplica al prueba de latencia).
+NODE         -> Máquina donde se ejecuta el proceso.
+PROCESS      -> Identificador(Rank) del proceso.
+SRC          -> Proceso que envía el/los mensaje/s
+DST          -> Proceso que recibe el/los mensaje/s
+TAG          -> Identificador único de parejas conectadas.
+COM_TIME     -> Uso MPI_Wtime para medir el tiempo de envío y confirmación de recepción.
+RUNING_TIME  -> Tiempo de ejecución del proceso.
+```
+
+Por mantener consistencia en todos los .csv dependiendo del script que se ejecute puede mostrar alguna 
+columna vacía dado que ese dato no es requerido para ese script en particular. Por otra parte el PACKET_SIZE 
+como se está usando tipo entero (4 Bytes) se multiplica el tamaño introducido por cuatro bytes para obtener 
+la cantidad total en bytes, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
 
