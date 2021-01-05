@@ -1,7 +1,7 @@
 ---
-title: "Práctica 2: Programación de Comunicaciones en MPI "
+title: "Práctica 2: Programación de Comunicaciones en MPI"
 author: "Shamuel Manrrique 802400 \\n
-         Aldrix Marfil 794976 "
+         Aldrix Marfil 794976"
 date: "08/01/2021"
 output:
   html_document:
