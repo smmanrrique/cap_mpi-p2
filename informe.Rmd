@@ -1,5 +1,5 @@
 ---
-title: "Practica 2: Programación de Comunicaciones en MPI "
+title: "Práctica 2: Programación de Comunicaciones en MPI "
 author: "Shamuel Manrrique 802400 \\n
          Aldrix Marfil 794976 "
 date: "08/01/2021"
@@ -9,7 +9,7 @@ output:
   pdf_document: default
 ---
 
-# COMUNICACIONES EN MPI
+# Comunicaciones en MPI
 
 En esta práctica se proponen algunos patrones de comunicación clásicos en paso de
 mensajes. Se pide realizar dos tareas con estos patrones:
@@ -20,29 +20,51 @@ mensajes. Se pide realizar dos tareas con estos patrones:
   - La segunda tarea consiste en la caracterización del comportamiento de estos
   patrones de comunicación
 
-# Hablar un poco sobre el codigo e implementacion
+## Implementación en C de comunicaciones en MPI  
+
+Para lograr los requerimientos de esta práctica se realizaron tres implementaciones:
+
+  - Test de latencia: Para esta sección se implementó el script **latency_test.c** el cual es un programa en MPI que mide la latencia de las comunicaciones por pareja asignadas a jugar ping-pong(rebotar paquetes) con un número parametrizado de envíos.
+  
+  - Test de ancho de banda: Para esta sección se implementó el script **bandwidth_test.c** el cual es un programa en MPI que mide el ancho de bandas de un envío de N paquetes de tamaño M entre dos procesos un emisor y un receptor que emite un ACK de validación una vez recibido los N paquetes. 
+  
+  - Test de latencia de la operación de broadcast: Para esta sección se implementó el script **broadcast_test.c** el cual es un programa en MPI que tiene dos funcionalidades:
+  
+    1. Broadcast One-to-one:  Envio de mensajes usando Send/Receive en donde un proceso es el root y tiene que hacer el envió uno a uno al resto de procesos.
+    
+    2. Broadcast Bcast: Envío usando la función de Bcast de MPI el cual realiza el envío simultáneo a todos los procesos, solo se le indica el proceso raíz en la misma llamada.
 
 
-los paquetes son de tipo entero(2 Bytes = 16 bits), por ende el tamaño vendra determinado por 2*n donde n es el tamaño del paquete. 
+## Archivos de ejecución 
 
+Para la ejecución de forma automatizada y parametrizada de cada uno de los script de c se creó un bash script para cada uno con los siguientes valores especificados para la ejecución: 
+```
+PROGRAM="name.out"         -> Nombre del archivo compilado con mpicc.
+CSV_NAME="name_test"       -> Nombre del archivo csv con los resultados.
+HOSTFILE="host_name.txt"   -> Nombre del Host File a usar
+PACKET_SIZES=(500 1000)    -> Arreglo con los distintos tamaños del Paquete
+NUMBER_PACKETS=(1000 5000) -> Arreglo con los distintos número de test/ejecuciones.
+NUMBER_PROCCESS=(8 16)     -> Arreglo con los distintos número de procesos.
+```
+Los Números usados en PACKET_SIZES, NUMBER_PACKETS, NUMBER_PROCCESS son simplemente para ejemplificar en los bash usados para los distintos test estos valores son bastante grandes para poder apreciar con mejor detalle las ventajas de la paralelización.
 
-Las salidas del programa se guadaran en un archivo .csv con las siguientes cabeceras
+## Archivo Resultante de los programas bash
+Para  facilitar el análisis de los resultados obtenidos de tiempo de ejecución, velocidad de transferencia y latencia de comunicación por cada uno de los scripts se guarda un archivo de salida .csv con las siguientes cabeceras:
 ```
 BCAST_TYPE   -> Type de broadcast en caso de aplicar.
 PACKET_SIZE  -> Tamaño en Bytes del paquete.
 N_PACKETS    -> Cantidad de paquete a enviar.
-n_BOUNCES    -> Numero de rebotes del paquete de un proceso a otro.
-NODE         -> Maquina donde se ejecuta el proceso.
+N_BOUNCES    -> Número de rebotes del paquete de un proceso a otro.
+NODE         -> Máquina donde se ejecuta el proceso.
 PROCESS      -> Identificador(Rank) del proceso.
-SRC          -> Proceso que envia el/los mensaje/s
+SRC          -> Proceso que envía el/los mensaje/s
 DST          -> Proceso que recibe el/los mensaje/s
-TAG          -> Identificador unico de parejas conectadas
-COM_TIME     -> Uso MPI_Wtime para medir el tiempo de envio y confirmacion de recepcion.
-RUNING_TIME  -> Tiempo de ejecucion del proceso en microsegundos.
+TAG          -> Identificador único de parejas conectadas
+COM_TIME     -> Uso MPI_Wtime para medir el tiempo de envío y confirmación de recepción.
+RUNING_TIME  -> Tiempo de ejecución del proceso.
 ```
 
-
-
+Por mantener consistencia en todos los .csv dependiendo del script que se ejecute puede arrojar alguna columna vacía dado que ese dato no es requerido para ese script en particular. Por otra parte el PACKET_SIZE como se está usando tipo entero (2 Bytes = 16 bits) se multiplica el tamaño introducido por dieciséis bits para obtener la cantidad total en bits, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
 
 ## Importar librerías necesarias
 ```{r setup, warning=FALSE,message=FALSE}
@@ -52,11 +74,11 @@ library("RcmdrMisc")
 library("nleqslv")       # Resolver sistema ecuaciones lineales/no lineales
 ```
 
-# Analisis de resultados de rendimiento
+# Análisis de resultados de rendimiento
 
 ## Test de latencia entre procesos en MPI
 ```{r}
-latency_test <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_test.csv")
+latency_test <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_test.csv", header=T, dec='.', sep=',', na.strings = "")
 
 # Todas las variables cuantitativas
 numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
@@ -67,10 +89,10 @@ numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], statistics=c("mean", "sd
 # Análisis de datos tomando en cuenta el factor TYPE 
 latency_type = latency_test$TYPE
 
-# Resumen estadístico de la variable colesterol por genero
+# Resumen estadístico de la variable colesterol por género
 numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], groups=latency_type, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
-# Grafica de diagrama de caja de Cholesterol~Género
+# Gráfica de diagrama de caja de Cholesterol~Género
 Boxplot(BOUNCE_TIME~TYPE, data=latency_test, id=list(method="y"))
 
 ```
@@ -81,7 +103,7 @@ Boxplot(BOUNCE_TIME~TYPE, data=latency_test, id=list(method="y"))
 plot(cars)
 ```
 
-## Test de latencia de la operacion Broadcast
+## Test de latencia de la operación Broadcast
 ```{r}
 plot(cars)
 ```
@@ -94,3 +116,8 @@ df
 ```{r}
 plot(cars)
 ```
+
+
+
+
+
