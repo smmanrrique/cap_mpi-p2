@@ -1,9 +1,0 @@
-BCAST_TYPE,PACKET_SIZE,N_PACKETS,N_BOUNCES,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME
---------------------------------------------------------------------------
-There are not enough slots available in the system to satisfy the 20 slots 
-that were requested by the application:
-  bandwidth.out
-
-Either request fewer slots for your application, or make more slots available
-for use.
---------------------------------------------------------------------------
