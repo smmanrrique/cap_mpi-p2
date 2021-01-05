@@ -139,6 +139,9 @@ numSummary(broadcast[,c("COM_TIME"), drop=FALSE], groups = broadcast$NPROC, stat
 # Grafía de Boxplot de Homicidios por regiones
 Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"))
 
+
+
+
 ```
 
 
