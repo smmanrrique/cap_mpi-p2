@@ -50,23 +50,22 @@ int main( int argc, char* argv[] ) {
         n_bounces   = atoi(argv[2]);
     }
 
-    int packet_size_bits = packet_size*16;
-
     MPI_Init( &argc, &argv );
     MPI_Comm_size( MPI_COMM_WORLD, &nproc ); // number of process
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );  // PID
     MPI_Get_processor_name( name, &resultlen );
 
     result = get_process(rank, nproc);
-
-    tstart = get_clock();
+    
     if (rank < result.pid_dst) {
         MPI_Status status;
 
         int send_packets[packet_size];
         int recv_packets[packet_size];
         int n_packets_ping = 0;
-
+    
+        tstart = get_clock();
+        ttotal = 0;
         while (n_packets_ping < n_bounces) {
             // printf("n_packets_ping: %d\n", n_packets_ping);
             t1 = MPI_Wtime();
@@ -77,17 +76,22 @@ int main( int argc, char* argv[] ) {
             t2 = MPI_Wtime();
             t  = (t2 - t1);
             // printf("Bounce time: %f [secs]\n", t);
-            printf(",%d,, %d, SR, %s, %u, %u, %u, %u, %f", packet_size_bits, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
             n_packets_ping++;
+            printf(",%d, %d,,%d, SR, %s, %u, %u, %u, %u, %f, -\n", nproc, sizeof(send_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
         }
-        
-    } else  {        
+        tend   = get_clock();
+        ttotal = (tend - tstart);
+        printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
+    
+    } else  {       
         MPI_Status status;
 
         int send_packets[packet_size];
         int recv_packets[packet_size];
         int n_packets_pong = 0;        
 
+        tstart = get_clock();
+        ttotal = 0;
         while(n_packets_pong < n_bounces) {
             // printf("n_packets_pong: %d\n", n_packets_pong);
             t1 = MPI_Wtime();
@@ -97,15 +101,13 @@ int main( int argc, char* argv[] ) {
             // printf("\twaiting for %d...\n", result.pid_dst);
             t2 = MPI_Wtime();
             t  = (t2 - t1);
-            // printf("Bounce time: %f [secs]\n", t);
-            printf(",%d,, %d, RS, %s, %u, %u, %u, %u, %f", packet_size_bits, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
             n_packets_pong++;
+            printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, -\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
         }
+        tend   = get_clock();
+        ttotal = (tend - tstart);
+        printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
     }
-    tend   = get_clock();
-	ttotal = (tend - tstart);
-    printf(",%12.10lf\n",ttotal);
-
     MPI_Finalize();
     return 0;
 }

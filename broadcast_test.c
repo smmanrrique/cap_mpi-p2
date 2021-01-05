@@ -37,7 +37,6 @@ int main( int argc, char* argv[] ) {
     }
 
     int packets[packet_size];
-    int packet_size_bits = packet_size*16;
 
     MPI_Init( &argc, &argv );
     MPI_Comm_size( MPI_COMM_WORLD, &nproc ); // number of process
@@ -48,14 +47,14 @@ int main( int argc, char* argv[] ) {
     if(broadcast){
         t1 = MPI_Wtime();
         MPI_Bcast(packets, packet_size, MPI_INT, 0, MPI_COMM_WORLD);
-        t1 = MPI_Wtime();
+        t2 = MPI_Wtime();
         t  = (t2 - t1);
-        printf("%d, %d,,,, %s, %u,,,, %f, ,", broadcast, packet_size_bits, name, rank, t);
-        // printf("BROADCAST DONE! Rank: %d\n", rank);       
-
+        printf("%d, %d, %d,,,, %s, %u,,,, %f", broadcast, nproc, sizeof(packets), name, rank, t);
+        // printf("BROADCAST DONE! Rank: %d\n", rank);   
     } else {
-        if(rank == 0) {
-            MPI_Status status;        
+        MPI_Status status;
+
+        if(rank == 0) {     
             t1 = MPI_Wtime();
             for (int i=0; i<nproc; i++) {
                 MPI_Send(packets, packet_size, MPI_INT, i, 0, MPI_COMM_WORLD);
@@ -63,12 +62,15 @@ int main( int argc, char* argv[] ) {
             }
             t2 = MPI_Wtime();
             t  = (t2 - t1);
-            printf("%d, %d,,,, %s, %u,,,, %f, ,", broadcast, packet_size_bits, name, rank, t);
-        } 
-
-        MPI_Status status;
-        MPI_Recv(packets, packet_size, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-        // printf("\t%d received from %d (size: %d)\n", rank, 0, packet_size);         
+            printf("%d, %d, %d,,,, %s, %u,,,, %f", broadcast, nproc, sizeof(packets), name, rank, t); 
+        } else {
+            t1 = MPI_Wtime();
+            MPI_Recv(packets, packet_size, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+            t2 = MPI_Wtime();
+            t  = (t2 - t1);  
+            // printf("\t%d received from %d (size: %d)\n", rank, 0, packet_size); 
+            printf("%d, %d, %d,,,, %s, %u,,,, %f", broadcast, nproc, sizeof(packets), name, rank, t);           
+        }        
     }
     tend   = get_clock();
 	ttotal = (tend - tstart);

@@ -33,7 +33,6 @@ struct Pair get_process(int rank, int nproc) {
     pids.pid_src = rank%nproc;
     pids.pid_dst = (rank+nproc/2)%nproc;
     pids.tag_id  = pids.pid_src + pids.pid_dst;
-    // printf("SRC: %u DST: %u TAG %u\n", pids.pid_src, pids.pid_dst, pids.tag_id);
     return pids;
 }
 
@@ -50,7 +49,6 @@ int main( int argc, char* argv[] ) {
         n_packets   = atoi(argv[2]);
     }
 
-    int packet_size_bits = packet_size*16;
     int send_packets[packet_size];
     int recv_packets[packet_size];
 
@@ -74,7 +72,7 @@ int main( int argc, char* argv[] ) {
         t2 = MPI_Wtime();
         t  = (t2 - t1);
         // printf("\tAll packets were received from %d. Ack: %d. Time: %f [sec]\n", result.pid_src, recv_ack, t);
-        printf(",%d, %d,,,%s, %u, %u, %u, %u, %f", packet_size_bits, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
+        printf(",%d, %d,%d,, SR,%s, %u, %u, %u, %u, %f", nproc, sizeof(send_packets), n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
     } else  {
         MPI_Status status;
         send_ack = 9;
@@ -90,7 +88,7 @@ int main( int argc, char* argv[] ) {
         t2 = MPI_Wtime();
         t  = (t2 - t1);
         // printf("\tAll packets were received from %d. Ack: %d. Time: %f [sec]\n", result.pid_src, recv_ack, t);  
-        printf(",%d, %d,,, %s, %u, %u, %u, %u, %f", packet_size_bits, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
+        printf(",%d, %d, %d,, RS, %s, %u, %u, %u, %u, %f", nproc, sizeof(recv_packets), n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
     }
     tend   = get_clock();
 	ttotal = (tend - tstart);
