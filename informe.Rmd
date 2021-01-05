@@ -9,46 +9,78 @@ output:
   pdf_document: default
 ---
 
-# Comunicaciones en MPI
+# Resumen
 
-En esta práctica se proponen algunos patrones de comunicación clásicos en paso de
-mensajes. Se pide realizar dos tareas con estos patrones:
+En esta práctica se abordan algunos patrones de comunicación clásicos en paso de
+mensajes. La idea es caracterizar el comportamiento de dichos patrones y para ello 
+se realizaron dos actividades con estos patrones:
 
-  - La primera tarea consiste en la implementación de estos patrones en lenguaje
-  C utilizando la librería de MPI disponible
+  1. La primera tarea consistió en la implementación de estos patrones en lenguaje
+  C utilizando MPI. 
   
-  - La segunda tarea consiste en la caracterización del comportamiento de estos
-  patrones de comunicación
+  2. La segunda tarea consistió en la caracterización del comportamiento de estos
+  patrones de comunicación.
 
-## Implementación en C de comunicaciones en MPI  
+## Actividad 1: Implementación en C de comunicaciones en MPI  
 
 Para lograr los requerimientos de esta práctica se realizaron tres implementaciones:
 
-  - Test de latencia: Para esta sección se implementó el script **latency_test.c** el cual es un programa en MPI que mide la latencia de las comunicaciones por pareja asignadas a jugar ping-pong(rebotar paquetes) con un número parametrizado de envíos.
+  - Test de latencia: 
+  Para esta sección se implementó el script **latency_test.c** el cual es un programa 
+  en MPI que mide la latencia de las comunicaciones por cada pareja asignadas a jugar 
+  ping-pong(rebotar paquetes). La cantidad de envíos (rebotes) que se realizan se 
+  encuentra parametrizados.
   
-  - Test de ancho de banda: Para esta sección se implementó el script **bandwidth_test.c** el cual es un programa en MPI que mide el ancho de bandas de un envío de N paquetes de tamaño M entre dos procesos un emisor y un receptor que emite un ACK de validación una vez recibido los N paquetes. 
+  - Test de ancho de banda: 
+  Para esta sección se implementó el script **bandwidth_test.c** el cual es un programa 
+  en MPI que mide el ancho de bandas de un envío de N paquetes (a modo de ráfaga) de 
+  tamaño M entre dos procesos, un emisor y un receptor que emite un ACK de validación 
+  una vez recibido los N paquetes. 
   
-  - Test de latencia de la operación de broadcast: Para esta sección se implementó el script **broadcast_test.c** el cual es un programa en MPI que tiene dos funcionalidades:
+  - Test de latencia de la operación de broadcast: 
+  Para esta sección se implementó el script **broadcast_test.c** el cual es un programa 
+  en MPI que tiene dos funcionalidades:
   
-    1. Broadcast One-to-one:  Envio de mensajes usando Send/Receive en donde un proceso es el root y tiene que hacer el envió uno a uno al resto de procesos.
+    1. Broadcast One-to-one:  
+    Envio de mensajes usando Send/Receive en donde un proceso es el root y tiene que 
+    hacer el envió uno a uno al resto de procesos.
     
-    2. Broadcast Bcast: Envío usando la función de Bcast de MPI el cual realiza el envío simultáneo a todos los procesos, solo se le indica el proceso raíz en la misma llamada.
+    2. Broadcast Bcast: Envío usando la función de Bcast de MPI el cual realiza el 
+    envío simultáneo a todos los procesos, solo se le indica el proceso raíz en la 
+    misma llamada.
 
+## Actividad 2: Caracterización de patrones
+
+Caracterizar los patrones requiere obtener medidas de sus comportamientos. Para ello se 
+empleó la función MPI_Wtime con la intención de calcular las siguientes medidas:
+  tiempo de ejecución, 
+  velocidad de transferencia
+  latencia de comunicación
+  
+A la hora de medir los tiempos se realizaron experimentos ejecutando muchas repeticiones para 
+minimizar la influencia de valores atípicos y de la falta de resolución del medidor de tiempo 
+en las medidas.
+
+ estos valores son bastante grandes para poder apreciar con mejor detalle las ventajas de la paralelización.
+
+
+# Apendice: 
 
 ## Archivos de ejecución 
 
-Para la ejecución de forma automatizada y parametrizada de cada uno de los script de c se creó un bash script para cada uno con los siguientes valores especificados para la ejecución: 
+Para la ejecución de forma automatizada y parametrizada de cada uno de los script de C se crearon 
+bash scripts para automatizar los experimentos. Un ejemplo de los siguientes valores especificados 
+para la ejecución son:  
 ```
 PROGRAM="name.out"         -> Nombre del archivo compilado con mpicc.
 CSV_NAME="name_test"       -> Nombre del archivo csv con los resultados.
 HOSTFILE="host_name.txt"   -> Nombre del Host File a usar
-PACKET_SIZES=(500 1000)    -> Arreglo con los distintos tamaños del Paquete
-NUMBER_PACKETS=(1000 5000) -> Arreglo con los distintos número de test/ejecuciones.
-NUMBER_PROCCESS=(8 16)     -> Arreglo con los distintos número de procesos.
+PACKET_SIZES=(500)         -> Arreglo con los distintos tamaños del Paquete
+NUMBER_PACKETS=(1000)      -> Arreglo con los distintos número de test/ejecuciones.
+NUMBER_PROCCESS=(4 8 16)   -> Arreglo con los distintos número de procesos.
 ```
-Los Números usados en PACKET_SIZES, NUMBER_PACKETS, NUMBER_PROCCESS son simplemente para ejemplificar en los bash usados para los distintos test estos valores son bastante grandes para poder apreciar con mejor detalle las ventajas de la paralelización.
 
-## Archivo Resultante de los programas bash
+## Archivo resultante de las ejecuciones
 Para  facilitar el análisis de los resultados obtenidos de tiempo de ejecución, velocidad de transferencia y latencia de comunicación por cada uno de los scripts se guarda un archivo de salida .csv con las siguientes cabeceras:
 ```
 BCAST_TYPE   -> Type de broadcast en caso de aplicar.
