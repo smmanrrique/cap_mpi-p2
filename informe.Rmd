@@ -66,53 +66,75 @@ RUNING_TIME  -> Tiempo de ejecución del proceso.
 
 Por mantener consistencia en todos los .csv dependiendo del script que se ejecute puede arrojar alguna columna vacía dado que ese dato no es requerido para ese script en particular. Por otra parte el PACKET_SIZE como se está usando tipo entero (2 Bytes = 16 bits) se multiplica el tamaño introducido por dieciséis bits para obtener la cantidad total en bits, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
 
+
+# Análisis de resultados de rendimiento
+
 ## Importar librerías necesarias
 ```{r setup, warning=FALSE,message=FALSE}
 library("ggplot2")
 library("dplyr")         # load
 library("RcmdrMisc")
 library("nleqslv")       # Resolver sistema ecuaciones lineales/no lineales
+library("readr")
+path = "C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/"
 ```
-
-# Análisis de resultados de rendimiento
 
 ## Test de latencia entre procesos en MPI
 ```{r}
-latency_test <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_test.csv", header=T, dec='.', sep=',', na.strings = "")
+# File name
+archivo = "latency_1000pkt.csv"
+read_csv = paste(path,archivo , sep="")
 
-# Todas las variables cuantitativas
-numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+# Read and import csv
+latency <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 
+latency = latency[latency$TYPE == "SR"]
+  
+numSummary(latency[,c("COM_TIME"), drop=FALSE], groups = latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"))
+
+#sqldf("SELECT  Región, COUNT(País) AS Count FROM Dataset GROUP BY Región order by count desc")
 ```
 
+
+## Test de Bandwidth entre procesos en MPI 
 ```{r}
-# Análisis de datos tomando en cuenta el factor TYPE 
-latency_type = latency_test$TYPE
+# File name
+archivo = "bandwidth_1000pkt.csv"
+read_csv = paste(path,archivo , sep="")
 
-# Resumen estadístico de la variable colesterol por género
-numSummary(latency_test[,c("BOUNCE_TIME"), drop=FALSE], groups=latency_type, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+# Read and import csv
+bandwidth <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 
-# Gráfica de diagrama de caja de Cholesterol~Género
-Boxplot(BOUNCE_TIME~TYPE, data=latency_test, id=list(method="y"))
+numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"))
+
+#sqldf("SELECT  Región, COUNT(País) AS Count FROM Dataset GROUP BY Región order by count desc")
 
 ```
 
-
-## Test de ancho de banda 
+## Test de Broadcast entre procesos en MPI 
 ```{r}
-plot(cars)
+# File name
+archivo = "broadcast_1000pkt.csv"
+read_csv = paste(path,archivo , sep="")
+
+# Read and import csv
+broadcast <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
+
+numSummary(broadcast[,c("COM_TIME"), drop=FALSE], groups = broadcast$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"))
+
 ```
 
-## Test de latencia de la operación Broadcast
-```{r}
-plot(cars)
-```
 
-df
-```{r}
-plot(cars)
-```
-df
+
 ```{r}
 plot(cars)
 ```
