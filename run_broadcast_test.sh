@@ -11,11 +11,11 @@ for p in "${NUMBER_PROCCESS[@]}"
     do
         for j in "${BROADCAST_VALUES[@]}"
             do
-                echo "PACKET_SIZE,TYPE,TIME" > ""$p"proc_"$i"bcast_"$CSV_FILE"";
+                echo "PACKET_SIZE,TYPE,RANK_SENDER,TIME,RUNNING_TIME" > "results/"$p"proc_"$j"bcast_"$CSV_FILE"";
                 for i in "${PACKET_SIZES[@]}" 
                     do
                         # echo "mpirun -n "$p" --hostfile "$HOSTFILE" -mca btl_tcp_if_include br0 "$PROGRAM" "$i" "$j"";
-                        mpirun -n "$p" --hostfile "$HOSTFILE" -mca btl_tcp_if_include br0 "$PROGRAM" "$i" "$j" >> ""$p"proc_"$i"bcast_"$CSV_FILE"";
+                        mpirun -n "$p" --hostfile "$HOSTFILE" -mca btl_tcp_if_include br0 "$PROGRAM" "$i" "$j" >> "results/"$p"proc_"$j"bcast_"$CSV_FILE"";
                     done
             done
     done
