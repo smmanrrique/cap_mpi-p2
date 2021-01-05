@@ -112,7 +112,7 @@ path = "C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/"
 ```
 
 ## Test de latencia entre procesos en MPI
-```{r}
+```{r, warning=FALSE,message=FALSE}
 # File name
 archivo = "latency_1000pkt.csv"
 read_csv = paste(path,archivo , sep="")
@@ -120,21 +120,38 @@ read_csv = paste(path,archivo , sep="")
 # Read and import csv
 latency <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_1000pkt.csv")
 
-
+#------------------------------------------------------------------------------#
+# Resumen estadisticos de los datos generales 
 numSummary(latency[,c("COM_TIME"), drop=FALSE], groups = latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"))
 
-
-sr_latency = filter(latency, TYPE==" SR" )
-numSummary(sr_latency[,c("COM_TIME"), drop=FALSE], groups = sr_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-
-# 
-Boxplot(COM_TIME~NPROC, data=sr_latency, id=list(method="y"))
-
+# Grafica Boxplot general
+Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+#------------------------------------------------------------------------------#
+# Filtra los tiempos medido por los receptores.
 rs_latency = filter(latency, TYPE==" RS" )
 numSummary(rs_latency[,c("COM_TIME"), drop=FALSE], groups = rs_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
-Boxplot(COM_TIME~NPROC, data=rs_latency, id=list(method="y"))
+Boxplot(COM_TIME~NPROC, data=rs_latency, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+
+#------------------------------------------------------------------------------#
+# Filtra los tiempos medido por los emisores iniciales.
+sr_latency = filter(latency, TYPE==" SR" )
+
+# Resumen estadistico
+numSummary(sr_latency[,c("COM_TIME"), drop=FALSE], groups = sr_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Resumen estadistico
+Boxplot(COM_TIME~NPROC, data=sr_latency, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+
+x = filter(sr_latency, NPROC==4 | NPROC==8)
+
+# Prueba de normalidad por groupo
+normalityTest(COM_TIME, test="shapiro.test", data=x) # Shapiro
+normalityTest(sr_latency$NPROC~sr_latency$COM_TIME, test="ad.test", data=Dataset)   # Anderson-Darling
+
+
+# qqPlot para la validación de normalidad
+with(sr_latency, qqPlot(sr_latency$COM_TIME, dist="norm", id=list(method="y", n=2, labels=rownames(COM_TIME))))
 
 ```
 
@@ -151,7 +168,7 @@ bandwidth <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
 # 
-Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"))
+Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"), xlab="Number of Process", ylab="Time")
 
 #sqldf("SELECT  Región, COUNT(País) AS Count FROM Dataset GROUP BY Región order by count desc")
 
@@ -169,18 +186,23 @@ broadcast <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 numSummary(broadcast[,c("COM_TIME"), drop=FALSE], groups = broadcast$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
 # Grafía de Boxplot de Homicidios por regiones
-Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"))
+Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"), xlab="Number of Process", ylab="Time")
 
+broadcast_0 = filter(broadcast, BCAST_TYPE==0)
 
+numSummary(broadcast_0[,c("COM_TIME"), drop=FALSE], groups = broadcast_0$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=broadcast_0, id=list(method="y"), xlab="Number of Process", ylab="Time")
 
+broadcast_1 = filter(broadcast, BCAST_TYPE==1)
+
+numSummary(broadcast_1[,c("COM_TIME"), drop=FALSE], groups = broadcast_1$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=broadcast_1, id=list(method="y"), xlab="Number of Process", ylab="Time")
 ```
 
-
-
-```{r}
-plot(cars)
-```
 
 
 
