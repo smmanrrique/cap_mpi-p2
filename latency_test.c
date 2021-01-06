@@ -33,7 +33,6 @@ struct Pair get_process(int rank, int nproc) {
     pids.pid_src = rank%nproc;
     pids.pid_dst = (rank+nproc/2)%nproc;
     pids.tag_id  = pids.pid_src + pids.pid_dst;
-    // printf("SRC: %u DST: %u TAG %u\n", pids.pid_src, pids.pid_dst, pids.tag_id);
     return pids;
 }
 
@@ -42,12 +41,14 @@ int main( int argc, char* argv[] ) {
     int rank, nproc, send_ack, recv_ack, resultlen;
     char name[MPI_MAX_PROCESSOR_NAME];
 
+    int experiment  = 0;
     int packet_size = PACKET_SIZE;
     int n_bounces   = N_BOUNCES;
 
     if (argc >= 2) {
-        packet_size = atoi(argv[1]);
-        n_bounces   = atoi(argv[2]);
+        experiment  = atoi(argv[1]);
+        packet_size = atoi(argv[2]);
+        n_bounces   = atoi(argv[3]);
     }
 
     MPI_Init( &argc, &argv );
@@ -60,53 +61,46 @@ int main( int argc, char* argv[] ) {
     if (rank < result.pid_dst) {
         MPI_Status status;
 
-        int send_packets[packet_size];
-        int recv_packets[packet_size];
+        void *send_packets = malloc(packet_size);
+        void *recv_packets = malloc(packet_size);
         int n_packets_ping = 0;
     
         tstart = get_clock();
         ttotal = 0;
         while (n_packets_ping < n_bounces) {
-            // printf("n_packets_ping: %d\n", n_packets_ping);
             t1 = MPI_Wtime();
-            MPI_Send(send_packets, packet_size, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
-            // printf("%d sent to %d\n", rank, result.pid_dst);
-            MPI_Recv(recv_packets, packet_size, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
-            // printf("\twaiting for %d...\n", result.pid_dst);
+            MPI_Send(send_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
+            MPI_Recv(recv_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
             t2 = MPI_Wtime();
             t  = (t2 - t1);
-            // printf("Bounce time: %f [secs]\n", t);
             n_packets_ping++;
-            printf(",%d, %d,,%d, SR, %s, %u, %u, %u, %u, %f, -\n", nproc, sizeof(send_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
+            printf("%d,,%d, %d,,%d, SR, %s, %u, %u, %u, %u, %f, \n", experiment, nproc, sizeof(send_packets), n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
         }
         tend   = get_clock();
         ttotal = (tend - tstart);
-        printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
+        printf("%d,,%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", experiment, nproc, sizeof(recv_packets), n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
     
     } else  {       
         MPI_Status status;
 
-        int send_packets[packet_size];
-        int recv_packets[packet_size];
+        void *send_packets = malloc(packet_size);
+        void *recv_packets = malloc(packet_size);
         int n_packets_pong = 0;        
 
         tstart = get_clock();
         ttotal = 0;
         while(n_packets_pong < n_bounces) {
-            // printf("n_packets_pong: %d\n", n_packets_pong);
             t1 = MPI_Wtime();
-            MPI_Recv(recv_packets, packet_size, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
-            // printf("%d received from %d\n", rank, result.pid_dst);
-            MPI_Send(send_packets, packet_size, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
-            // printf("\twaiting for %d...\n", result.pid_dst);
+            MPI_Recv(recv_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
+            MPI_Send(send_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
             t2 = MPI_Wtime();
             t  = (t2 - t1);
             n_packets_pong++;
-            printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, -\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
+            printf("%d,,%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, \n", experiment, nproc, sizeof(recv_packets), n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
         }
         tend   = get_clock();
         ttotal = (tend - tstart);
-        printf(",%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", nproc, sizeof(recv_packets)*2, n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
+        printf("%d,,%d, %d,,%d, RS, %s, %u, %u, %u, %u, %f, %12.10lf\n", experiment, nproc, sizeof(recv_packets), n_bounces, name, rank, result.pid_src, result.pid_dst, result.tag_id, t, ttotal);
     }
     MPI_Finalize();
     return 0;
