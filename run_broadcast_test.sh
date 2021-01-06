@@ -2,7 +2,7 @@
 PROGRAM="broadcast.out"
 CSV_NAME="broadcast_test"
 HOSTFILE="host_lab004.txt"
-PACKET_SIZES=(500)
+PACKET_SIZES=(1 1000 1000000) # 1 byte, 1 kilobyte, 1 megabyte
 BROADCAST_VALUES=(0 1)
 NUMBER_PROCCESS=(4 8 16)
 
