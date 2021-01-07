@@ -1,8 +1,10 @@
-CSV_NAME="latency"
-NUMBER_PACKETS=1000
+CSV_NAME="latency_experimento"
+NUMBER_PACKETS=10
 
-echo "BCAST_TYPE,NPROC,PACKET_SIZE,N_PACKETS,N_BOUNCES,TYPE,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME" >> $CSV_NAME"_"$NUMBER_PACKETS"pkt.csv"
-for fname in latency_test_*proc_1000bounces_500size.csv
+# echo "BCAST_TYPE,NPROC,PACKET_SIZE,N_PACKETS,N_BOUNCES,TYPE,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME" >> $CSV_NAME"_"$NUMBER_PACKETS"pkt.csv"
+echo "EXPERIMENT, BCAST_TYPE,NPROC,PACKET_SIZE,N_PACKETS,N_BOUNCES,TYPE,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME" >> $CSV_NAME"_"$NUMBER_PACKETS".csv"
+
+for fname in latency_test_*experiments_*proc_*bounces_*size.csv
     do
-        tail -n+2 $fname >> $CSV_NAME"_"$NUMBER_PACKETS"pkt.csv"
+        tail -n+2 $fname >> $CSV_NAME"_"$NUMBER_PACKETS".csv"
     done
