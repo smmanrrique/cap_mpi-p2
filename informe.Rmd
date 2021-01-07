@@ -154,22 +154,43 @@ wilcox.test( x4$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.
 # Ejecucion en nodos distintos 
 wilcox.test( x16$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
 
-
 resumen_latency = sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, SUM(PACKET_SIZE) TAMAÑO_TOTAL,MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM latency GROUP BY  NPROC")
 resumen_latency
 
-#------------------------------------------------------------------------------#
+```
 
+#### Experimentos de latencia 
+```{r}
+# Read and import csv
+latency_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_experimento_10.csv")
+latency_exp = filter(latency_exp, TYPE==" RS" )
+
+resumen_latency_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576,4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM latency_exp  GROUP BY NPROC,PACKET_SIZE ")
+
+resumen_latency_exp
+
+library(ggplot2)
+ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=AVERAGE,  group = NPROC )) + 
+  geom_line(colour="red")  + 
+  geom_point( size=2, shape=11, fill="white", colour="red") + 
+  theme_minimal()
+
+library(ggplot2)
+ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=AVERAGE, group = NPROC, colour =NPROC )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  theme_minimal()
+
+sqldf("SELECT   PACKET_SIZE, NPROC, ROUND(MIN(RUNNING_TIME),4) BEST_TIME, ROUND(MAX(RUNNING_TIME),4) WORST_TIME, ROUND(AVG(RUNNING_TIME),4) AVERAGE  FROM latency_exp  WHERE RUNNING_TIME IS NOT NULL GROUP BY NPROC,PACKET_SIZE  ")
 
 
 
 ```
-
-
 Para esta prueba se toma en cuenta la ejecución del mismo número de paquetes con tamaño 500(OJO) con distintos número de procesos 4 (única máquina) y 8-16(varias máquinas) para comparar los tiempos entre ellos. Se puede observar en el resumen estadístico que los datos están esparcidos por lo que para la gráfica de boxplot se omiten valores atípicos se procede a corroborar que existe una diferencia entre la ejecución del programa con todos los slots en una máquina o en distintas máquinas. Para poder comprobar si existe diferencia entre los grupos primero se realizó un test de normalidad donde se comprobó que ninguno de los datos sigue una distribución normal. También se validó que la varianza de los grupos son distintas. Realizada estas pruebas se empleó la prueba de wilcoxon donde se observa que el valor p se encuentra debajo de nuestro nivel de significancia ( α=0,05), con lo cual rechazamos la hipótesis nula(los grupos poseen la misma media) y concluimos que hay una diferencia estadísticamente significativa entre las dos medicamentos.
 
 Por ende se puede concluir que la comunicación entre procesos usando MPI tiene un peso proporcional al número de máquinas distintas involucradas en el cálculo.  
 
+---
 
 ### Prueba de Bandwidth entre procesos en MPI 
 ```{r}
@@ -188,10 +209,26 @@ numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, stat
 # Grafica Boxplot general
 Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
 
-sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM bandwidth GROUP BY  NPROC")
+sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, ROUND(AVG(COM_TIME),4) AVERAGE FROM bandwidth GROUP BY  NPROC")
 
 #------------------------------------------------------------------------------#
 ```
+
+#### Experimentos de bandwidth 
+```{r}
+# Read and import csv
+bandwidth_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/bandwidth_experiment_10.csv")
+bandwidth_exp = filter(latency_exp, TYPE==" RS" )
+
+resumen_bandwidth_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM bandwidth_exp  GROUP BY NPROC,PACKET_SIZE ")
+
+resumen_bandwidth_exp
+
+```
+
+
+---
+
 
 ### Prueba de Broadcast entre procesos en MPI 
 ```{r}
@@ -221,6 +258,21 @@ sqldf("SELECT BCAST_TYPE, COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM
 #------------------------------------------------------------------------------#
 ```
 Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
+
+
+#### Experimentos de Broadcast 
+```{r}
+# Read and import csv
+broadcast_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/broadcast_experiment_10.csv")
+broadcast_exp = filter(latency_exp, TYPE==" RS" )
+
+resumen_broadcast_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM broadcast_exp  GROUP BY NPROC,PACKET_SIZE ")
+
+resumen_broadcast_exp
+
+```
+
+---
 
 # Apendice: 
 
