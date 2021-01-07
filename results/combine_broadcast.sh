@@ -1,8 +1,9 @@
-CSV_NAME="broadcast"
-NUMBER_PACKETS=1000
+CSV_NAME="broadcast_experiment"
+NUMBER_PACKETS=10
 
-echo "BCAST_TYPE,NPROC,PACKET_SIZE,N_PACKETS,N_BOUNCES,TYPE,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME" >> $CSV_NAME"_"$NUMBER_PACKETS"pkt.csv"
-for fname in broadcast_test_*proc_*bcast_500size.csv
+echo "EXPERIMENT,BCAST_TYPE,NPROC,PACKET_SIZE,N_PACKETS,N_BOUNCES,TYPE,NODE,PROCESS,SRC,DST,TAG,COM_TIME,RUNNING_TIME" >> $CSV_NAME"_"$NUMBER_PACKETS".csv"
+# for fname in broadcast_test_*proc_*bcast_500size.csv
+for fname in broadcast_test_10experiments_*proc_*bcast_*size.csv
     do
-        tail -n+2 $fname >> $CSV_NAME"_"$NUMBER_PACKETS"pkt.csv"
+        tail -n+2 $fname >> $CSV_NAME"_"$NUMBER_PACKETS".csv"
     done

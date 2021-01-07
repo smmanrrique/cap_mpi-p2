@@ -48,8 +48,8 @@ int main( int argc, char* argv[] ) {
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );  // PID
     MPI_Get_processor_name( name, &resultlen );
 
-    char send_packets[packet_size];
-    char recv_packets[packet_size];
+    void *send_packets = malloc(packet_size);
+    void *recv_packets = malloc(packet_size);
 
     result = get_process(rank, nproc);
 
@@ -58,12 +58,12 @@ int main( int argc, char* argv[] ) {
 
         t1 = MPI_Wtime();
         for (int i=0; i<n_packets; i++) {
-            MPI_Send(send_packets, packet_size, MPI_CHAR, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
+            MPI_Send(send_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
         }
         MPI_Recv(&recv_ack, 1, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
         t2 = MPI_Wtime();
         t  = (t2 - t1);
-        printf("%d, ,%d, %d,%d,, SR,%s, %u, %u, %u, %u, %f", experiment, nproc, sizeof(send_packets), n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
+        printf("%d, ,%d, %d,%d,, SR,%s, %u, %u, %u, %u, %f\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
     } else  {
         MPI_Status status;
         send_ack = 9;
@@ -71,13 +71,13 @@ int main( int argc, char* argv[] ) {
         t1 = MPI_Wtime();
         int i = 1;
         while (i<n_packets+1) {
-            MPI_Recv(recv_packets, packet_size, MPI_CHAR, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
+            MPI_Recv(recv_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
             i++;
         }
         MPI_Send(&send_ack, 1, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
         t2 = MPI_Wtime();
         t  = (t2 - t1);
-        printf("%d, ,%d, %d, %d,, RS, %s, %u, %u, %u, %u, %f", experiment, nproc, sizeof(recv_packets), n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
+        printf("%d, ,%d, %d, %d,, RS, %s, %u, %u, %u, %u, %f\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
     }
     
     MPI_Finalize();
