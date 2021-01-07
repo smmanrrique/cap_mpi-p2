@@ -105,6 +105,7 @@ library("dplyr")         # load
 library("RcmdrMisc")
 library("nleqslv")       # Resolver sistema ecuaciones lineales/no lineales
 library("readr")
+library("sqldf")
 path = "C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/"
 ```
 
@@ -116,7 +117,7 @@ dos nodos con la finalidad de apreciar la latencia existente:
 El eje X indica la cantidad de procesos usados en la prueba y el eje Y representa el 
 tiempo de rebote (en segundos).
 
-```{r}
+```{r, warning=FALSE,message=FALSE}
 # File name
 archivo = "latency_1000pkt.csv"
 read_csv = paste(path,archivo , sep="")
@@ -124,24 +125,51 @@ read_csv = paste(path,archivo , sep="")
 # Read and import csv
 latency <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_1000pkt.csv")
 
+latency = filter(latency, TYPE==" RS" )
+
+#------------------------------------------------------------------------------#
+# Resumen estadisticos
 numSummary(latency[,c("COM_TIME"), drop=FALSE], groups = latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"))
 
-sr_latency = filter(latency, TYPE==" SR" )
-numSummary(sr_latency[,c("COM_TIME"), drop=FALSE], groups = sr_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
- 
-Boxplot(COM_TIME~NPROC, data=sr_latency, id=list(method="y"))
+# Grafica Boxplot general
+Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
 
-rs_latency = filter(latency, TYPE==" RS" )
-numSummary(rs_latency[,c("COM_TIME"), drop=FALSE], groups = rs_latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+x4 = filter(latency, NPROC==4)
+x8 = filter(latency, NPROC==8)
+x16 = filter(latency, NPROC==16)
 
-Boxplot(COM_TIME~NPROC, data=rs_latency, id=list(method="y"))
+# Prueba de normalidad por grupo
+normalityTest(x4$COM_TIME, test="ad.test")   # Anderson-Darling
+normalityTest(x8$COM_TIME, test="ad.test")   # Anderson-Darling
+normalityTest(x16$COM_TIME, test="ad.test")   # Anderson-Darling
+
+# Test de varianza
+var.test(x4$COM_TIME,x8$COM_TIME)
+var.test(x16$COM_TIME,x8$COM_TIME)
+
+
+# Validamos si las dos medias son iguales o no 
+# Ejecucion en un nodo y dos nodos distintos 
+wilcox.test( x4$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
+# Ejecucion en nodos distintos 
+wilcox.test( x16$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
+
+
+resumen_latency = sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, SUM(PACKET_SIZE) TAMAÑO_TOTAL,MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM latency GROUP BY  NPROC")
+resumen_latency
+
+#------------------------------------------------------------------------------#
+
+
+
+
 ```
 
-En la gráfica de boxplot se observan algunos valores atipicos para cada una de las 
-ejecuciones con distinta cantidad de procesos. Y en la tabla se observa que la media 
-de los tiempos de rebote es baja y que el 50% de los rebotes se tarda menos de 0.000212
-segundos.
+
+Para esta prueba se toma en cuenta la ejecución del mismo número de paquetes con tamaño 500(OJO) con distintos número de procesos 4 (única máquina) y 8-16(varias máquinas) para comparar los tiempos entre ellos. Se puede observar en el resumen estadístico que los datos están esparcidos por lo que para la gráfica de boxplot se omiten valores atípicos se procede a corroborar que existe una diferencia entre la ejecución del programa con todos los slots en una máquina o en distintas máquinas. Para poder comprobar si existe diferencia entre los grupos primero se realizó un test de normalidad donde se comprobó que ninguno de los datos sigue una distribución normal. También se validó que la varianza de los grupos son distintas. Realizada estas pruebas se empleó la prueba de wilcoxon donde se observa que el valor p se encuentra debajo de nuestro nivel de significancia ( α=0,05), con lo cual rechazamos la hipótesis nula(los grupos poseen la misma media) y concluimos que hay una diferencia estadísticamente significativa entre las dos medicamentos.
+
+Por ende se puede concluir que la comunicación entre procesos usando MPI tiene un peso proporcional al número de máquinas distintas involucradas en el cálculo.  
+
 
 ### Prueba de Bandwidth entre procesos en MPI 
 ```{r}
@@ -152,11 +180,17 @@ read_csv = paste(path,archivo , sep="")
 # Read and import csv
 bandwidth <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
 
+bandwidth= filter(latency, TYPE==" RS")
+#------------------------------------------------------------------------------#
+# Resumen estadisticos de los datos
 numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
- 
-Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"))
 
-#sqldf("SELECT  Región, COUNT(País) AS Count FROM Dataset GROUP BY Región order by count desc")
+# Grafica Boxplot general
+Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+
+sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM bandwidth GROUP BY  NPROC")
+
+#------------------------------------------------------------------------------#
 ```
 
 ### Prueba de Broadcast entre procesos en MPI 
@@ -167,20 +201,26 @@ read_csv = paste(path,archivo , sep="")
 
 # Read and import csv
 broadcast <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
+#------------------------------------------------------------------------------#
+broadcast_0 = filter(broadcast, BCAST_TYPE==0)
 
-numSummary(broadcast[,c("COM_TIME"), drop=FALSE], groups = broadcast$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+numSummary(broadcast_0[,c("COM_TIME"), drop=FALSE], groups = broadcast_0$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
 # Grafía de Boxplot de Homicidios por regiones
-Boxplot(COM_TIME~NPROC, data=broadcast, id=list(method="y"))
+Boxplot(COM_TIME~NPROC, data=broadcast_0, id=list(method="y"), xlab="Number of Process", ylab="Time")
+
+broadcast_1 = filter(broadcast, BCAST_TYPE==1)
+
+numSummary(broadcast_1[,c("COM_TIME"), drop=FALSE], groups = broadcast_1$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+# Grafía de Boxplot de Homicidios por regiones
+Boxplot(COM_TIME~NPROC, data=broadcast_1, id=list(method="y"), xlab="Number of Process", ylab="Time")
+
+
+sqldf("SELECT BCAST_TYPE, COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM broadcast GROUP BY BCAST_TYPE, NPROC")
+#------------------------------------------------------------------------------#
 ```
-
-
-
-```{r}
-plot(cars)
-```
-
-
+Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
 
 # Apendice: 
 
@@ -221,4 +261,5 @@ Por mantener consistencia en todos los .csv dependiendo del script que se ejecut
 columna vacía dado que ese dato no es requerido para ese script en particular. Por otra parte el PACKET_SIZE 
 como se está usando tipo entero (4 Bytes) se multiplica el tamaño introducido por cuatro bytes para obtener 
 la cantidad total en bytes, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
+
 
