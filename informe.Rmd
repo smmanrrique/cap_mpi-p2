@@ -13,7 +13,7 @@ output:
 
 En esta práctica se abordan algunos patrones de comunicación clásicos en paso de
 mensajes. La idea es caracterizar el comportamiento de dichos patrones y para ello 
-se realizaron dos actividades con estos patrones:
+se realizaron las siguientes dos actividades:
 
   1. La primera tarea consistió en la implementación de estos patrones en lenguaje
   C utilizando MPI. 
@@ -26,23 +26,23 @@ se realizaron dos actividades con estos patrones:
 Para lograr los requerimientos de esta práctica se realizaron tres implementaciones:
 
   - Prueba de latencia: 
-  Para esta sección se implementó el script **latency_prueba.c** el cual es un programa 
+  Para esta sección se implementó el script **latency_test.c** el cual es un programa 
   en MPI que mide la latencia de las comunicaciones por cada pareja asignadas a jugar 
-  ping-pong(rebotar paquetes). La cantidad de envíos (rebotes) que se realizan se 
+  Ping-pong (rebotar paquetes). La cantidad de envíos (rebotes) que se realizan se 
   encuentra parametrizados.
   
   - Prueba de ancho de banda: 
-  Para esta sección se implementó el script **bandwidth_prueba.c** el cual es un programa 
-  en MPI que mide el ancho de bandas de un envío de N paquetes (a modo de ráfaga) de 
+  Para esta sección se implementó el script **bandwidth_test.c** el cual es un programa 
+  en MPI que mide el ancho de banda de un envío de N paquetes (a modo de ráfaga) de 
   tamaño M entre dos procesos, un emisor y un receptor que emite un ACK de validación 
-  una vez recibido los N paquetes. 
+  una vez recibido los N paquetes de la ráfaga. 
   
   - Prueba de latencia de la operación de broadcast: 
-  Para esta sección se implementó el script **broadcast_prueba.c** el cual es un programa 
+  Para esta sección se implementó el script **broadcast_test.c** el cual es un programa 
   en MPI que tiene dos funcionalidades:
   
     1. Broadcast One-to-one:  
-    Envio de mensajes usando Send/Receive en donde un proceso es el root y tiene que 
+    Envío de mensajes usando Send/Receive en donde un proceso es el root y tiene que 
     hacer el envió uno a uno al resto de procesos.
     
     2. Broadcast Bcast: Envío usando la función de Bcast de MPI el cual realiza el 
@@ -51,55 +51,58 @@ Para lograr los requerimientos de esta práctica se realizaron tres implementaci
 
 ## Actividad 2: Caracterización de patrones
 
-Caracterizar los patrones requiere obtener medidas de sus comportamientos. Para ello se 
-empleó la función MPI_Wtime con la intención de calcular las siguientes medidas:
-  - Tiempos de ejecución, 
+Caracterizar los patrones requiere obtener medidas de sus comportamientos. Para ello se calcularon las siguientes medidas:
+  - Tiempos de ejecución
   - Velocidades de transferencia
   - Latencias de comunicación
   
-A la hora de medir los tiempos se realizaron experimentos ejecutando muchas repeticiones 
-para minimizar la influencia de valores atípicos y de la falta de resolución del medidor 
-de tiempo en las medidas.
+A la hora de medir los tiempos se realizaron experimentos ejecutando varias repeticiones (ejecutar cada prueba varias veces) para minimizar la influencia de valores atípicos y de la 
+falta de resolución del medidor de tiempo en las medidas.
 
 ### Pruebas realizadas
-  Se realizaron las siguientes pruebas para cada uno de las implementaciones descritas en 
-  la actividad 1:
+
+Se realizaron diversas pruebas para experimentar distintos escenarios y observar cómo varían  
+las distintas medidas de interés. Para ello, se utilizaron dos computadoras conectadas, cada una con 4 núcleos disponibles. Las pruebas realizadas involucran ejecuciones usando 4 procesos (mapeados en una misma máquina) y 8 procesos (mapeados en ambas máquinas). Respecto al tamaño de los paquetes que se envían los procesos tenemos 1 Byte, 1 Kilobyte, 1 Megabyte, 10 Megabyte. 
+
+Finalmente se calcularon las siguientes medidas para cada una de las implementaciones descritas en la actividad 1 y con los valores de parámetros mencionados previamente:
 
   - Prueba de latencia: 
     * Tiempo de rebote: 
         Por cada pareja asignada se midió el tiempo de un rebote. Esto es, por ejemplo, 
         para la pareja 0 - 1, se midió el tiempo que tarda el paquete en ser enviado desde 
-        0 a 1 mas el tiempo del reenvío que hace 1 a 0. 
+        0 a 1 mas el tiempo del reenvío que tarda de 1 a 0. 
     * Tiempo total de rebote:
-        Como el numero de rebotes puede variar, se midió el timepo total que tardan todos
-        los rebotes en ejecutarse por proceso. 
+        Como el número de rebotes puede variar, se midió el tiempo total que tardan todos
+        los rebotes en ejecutarse por cada par de procesos. 
 
   - Prueba de ancho de banda: 
     * Tiempo de envío de paquetes:
         Por cada par de parejas se midió el tiempo de recepción de una ráfaga de mensajes. 
         Esto es, por ejemplo, para la pareja 0 - 1, se midió el tiempo que tarda el proceso
-        0 en enviar una cantidad N de paquetes y luego 1 envia un paquete confirmacion al 
+        0 en enviar una cantidad N de paquetes y luego 1 envía un paquete confirmación al 
         proceso 0 y se detiene la medición. 
     * Ancho de banda:
         Teniendo la cantidad de paquetes enviados (N), el tamaño de su tipo de datos (T) y 
-        el tiempo en segundos (E) que tarda el envío de la ráfaga hasta su confirmacion se 
-        puede calcular el ancho de banda como el maximo ancho de banda obtenido de sacar la 
+        el tiempo en segundos (E) que tarda el envío de la ráfaga hasta su confirmación se 
+        puede calcular el ancho de banda como el máximo ancho de banda obtenido de sacar la 
         siguiente cuenta para todos las rafagas de las parejas: Bd = (N*T) / E  
     * Velocidad de transferencia:
-        Esta velocidad de transferencia efectiva vendria dada por la fórmula anterior pero
+        Esta velocidad de transferencia efectiva vendría dada por la fórmula anterior pero
         tomando el promedio de todas las cuentas Bd = (N*T) / E 
   
   - Prueba de latencia de la operación de broadcast: 
-      Se fijó el proceso 0 como root (es quien envia los paquetes a los otros nodos). Luego, 
-      se midió el tiempo que tardan los envios del proceso root a los otros procesos para 
+      Se fijó el proceso 0 como root (es quien envía los paquetes a los otros nodos). Luego, 
+      se midió el tiempo que tardan los envíos del proceso root a los otros procesos para 
       las siguientes dos implementaciones:
         1. Broadcast One-to-one  
         2. Broadcast Bcast
 
+---
+
 ### Análisis de resultados de rendimiento
 
-### Importar librerías necesarias
-```{r setup, warning=FALSE,message=FALSE}
+<!-- ### Importar librerías necesarias -->
+```{r setup, warning=FALSE,message=FALSE, echo=FALSE}
 library("ggplot2")
 library("dplyr")         # load
 library("RcmdrMisc")
@@ -109,173 +112,206 @@ library("sqldf")
 path = "C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/"
 ```
 
+---
 ### Prueba de latencia entre procesos en MPI
 
-A continuación se muestran medidas sobre el tiempo de rebote de un paquete entre 
-dos nodos con la finalidad de apreciar la latencia existente:
+Se realizaron 10 ejecuciones del script de latencia. Y se emplearon variaciones de los parámetros Número de procesos (4 y 8), Tamaño del paquete enviado (1B, 1 KB, 1 MB, 10MB). A continuación se mostrará el resumen estadístico de las latencias obtenidas para experimentos usando 4 y 8 procesos con envíos de paquetes de 1 Byte y 1 Kilobyte. 
 
-El eje X indica la cantidad de procesos usados en la prueba y el eje Y representa el 
-tiempo de rebote (en segundos).
-
-```{r, warning=FALSE,message=FALSE}
-# File name
-archivo = "latency_1000pkt.csv"
-read_csv = paste(path,archivo , sep="")
-
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
 # Read and import csv
-latency <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_1000pkt.csv")
+latency_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_experimento_10.csv")
+latency_exp = filter(latency_exp, TYPE==" RS")
 
-latency = filter(latency, TYPE==" RS" )
+# Resumen estadísticos con PACKET_SIZE==1 por proceso
+numSummary(filter(latency_exp, PACKET_SIZE==1)[,c("COM_TIME"), drop=FALSE], groups = filter(latency_exp, PACKET_SIZE==1)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
-#------------------------------------------------------------------------------#
-# Resumen estadisticos
-numSummary(latency[,c("COM_TIME"), drop=FALSE], groups = latency$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+# Resumen estadísticos con PACKET_SIZE==10000000 por proceso
+numSummary(filter(latency_exp, PACKET_SIZE==10000000)[,c("COM_TIME"), drop=FALSE], groups = filter(latency_exp, PACKET_SIZE==10000000)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+```
+Se puede determinar por los resultados que el tiempo de envío y recepción del paquete depende del tamaño del paquete, a mayor tamaño mayor latencia. También se puede deducir que el número de procesos mapeados en distintas máquinas usadas para la ejecución influyen en la ejecución.  
+
+Para visualizar mejor la diferencia de latencia entre usar 4 y 8 procesos mapeados en distintas máquinas se muestra un diagrama de caja donde se muestra el número de procesos con relación a la variable tiempo. A partir de 4 proceso la ejecución se lleva a cabo en dos máquinas. Por lo que el coste de comunicación es mucho mayor, Los procesos quedan distribuidos de forma tal que las parejas están separadas en máquinas distintas.
+
+#### Boxplot del tiempo promedio por numero de proceso 
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+latency = latency_exp
 
 # Grafica Boxplot general
-Boxplot(COM_TIME~NPROC, data=latency, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+box_latency = Boxplot(COM_TIME~NPROC, data=filter(latency_exp, PACKET_SIZE==10000000), id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
 
+# Resumen estadísticos
 x4 = filter(latency, NPROC==4)
 x8 = filter(latency, NPROC==8)
-x16 = filter(latency, NPROC==16)
 
 # Prueba de normalidad por grupo
-normalityTest(x4$COM_TIME, test="ad.test")   # Anderson-Darling
-normalityTest(x8$COM_TIME, test="ad.test")   # Anderson-Darling
-normalityTest(x16$COM_TIME, test="ad.test")   # Anderson-Darling
+n4 = normalityTest(x4$COM_TIME, test="ad.test")   # Anderson-Darling
+n8 = normalityTest(x8$COM_TIME, test="ad.test")   # Anderson-Darling
 
 # Test de varianza
-var.test(x4$COM_TIME,x8$COM_TIME)
-var.test(x16$COM_TIME,x8$COM_TIME)
+v48 = var.test(x4$COM_TIME,x8$COM_TIME)
 
 
 # Validamos si las dos medias son iguales o no 
-# Ejecucion en un nodo y dos nodos distintos 
-wilcox.test( x4$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
-# Ejecucion en nodos distintos 
-wilcox.test( x16$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
-
-resumen_latency = sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, SUM(PACKET_SIZE) TAMAÑO_TOTAL,MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM latency GROUP BY  NPROC")
-resumen_latency
-
-```
-
-#### Experimentos de latencia 
-```{r}
-# Read and import csv
-latency_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/latency_experimento_10.csv")
-latency_exp = filter(latency_exp, TYPE==" RS" )
-
-resumen_latency_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576,4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM latency_exp  GROUP BY NPROC,PACKET_SIZE ")
-
-resumen_latency_exp
-
-library(ggplot2)
-ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=AVERAGE,  group = NPROC )) + 
-  geom_line(colour="red")  + 
-  geom_point( size=2, shape=11, fill="white", colour="red") + 
-  theme_minimal()
-
-library(ggplot2)
-ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=AVERAGE, group = NPROC, colour =NPROC )) + 
-  geom_line()  + 
-  geom_point( size=2, shape=21, fill="white") + 
-  theme_minimal()
-
-sqldf("SELECT   PACKET_SIZE, NPROC, ROUND(MIN(RUNNING_TIME),4) BEST_TIME, ROUND(MAX(RUNNING_TIME),4) WORST_TIME, ROUND(AVG(RUNNING_TIME),4) AVERAGE  FROM latency_exp  WHERE RUNNING_TIME IS NOT NULL GROUP BY NPROC,PACKET_SIZE  ")
-
-
+# Ejecución en un nodo y dos nodos distintos 
+wc = wilcox.test( x4$COM_TIME, x8$COM_TIME, mu= 0,paired = FALSE, alternative = "two.sided", conf.int = T)
 
 ```
 Para esta prueba se toma en cuenta la ejecución del mismo número de paquetes con tamaño 500(OJO) con distintos número de procesos 4 (única máquina) y 8-16(varias máquinas) para comparar los tiempos entre ellos. Se puede observar en el resumen estadístico que los datos están esparcidos por lo que para la gráfica de boxplot se omiten valores atípicos se procede a corroborar que existe una diferencia entre la ejecución del programa con todos los slots en una máquina o en distintas máquinas. Para poder comprobar si existe diferencia entre los grupos primero se realizó un test de normalidad donde se comprobó que ninguno de los datos sigue una distribución normal. También se validó que la varianza de los grupos son distintas. Realizada estas pruebas se empleó la prueba de wilcoxon donde se observa que el valor p se encuentra debajo de nuestro nivel de significancia ( α=0,05), con lo cual rechazamos la hipótesis nula(los grupos poseen la misma media) y concluimos que hay una diferencia estadísticamente significativa entre las dos medicamentos.
 
-Por ende se puede concluir que la comunicación entre procesos usando MPI tiene un peso proporcional al número de máquinas distintas involucradas en el cálculo.  
+Por ende se puede concluir que la comunicación entre procesos usando MPI tiene un peso proporcional al número de máquinas distintas involucradas en el cálculo. 
+
+#### Métricas de latencia promediando los experimentos
+#### Tabla resumen de los tiempos por tamaño del paquete y numero de procesos
+```{r, echo=FALSE}
+sqldf("SELECT   PACKET_SIZE, NPROC, ROUND(MIN(RUNNING_TIME),4) BEST_TIME, ROUND(MAX(RUNNING_TIME),4) WORST_TIME, ROUND(AVG(RUNNING_TIME),4) AVERAGE  FROM latency_exp  WHERE RUNNING_TIME IS NOT NULL GROUP BY NPROC,PACKET_SIZE  ")
+# message(sprintf("Message="))
+```
+comentario 
+
+#### Tabla resumen del bandwidth y throughput
+```{r, echo=FALSE}
+resumen_latency_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576,6) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM latency_exp  GROUP BY NPROC,PACKET_SIZE ")
+
+resumen_latency_exp
+
+```
+
+#### Gráfica comparativa de tiempo de envio por tamaño del paquete distinguiendo por proceso 
+```{r, echo=FALSE}
+ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = NPROC, colour =NPROC )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  labs(x = 'Tiempo promedio de envío',
+       y = 'Tamaño del paquete')+
+  theme_minimal()
+```
+Con las pruebas realizadas se puede apreciar que tanto el tamaño del paquete y el número de máquinas en la que se ejecutan los procesos influyen en  los resultados obtenidos. El tiempo incrementa casi al doble al incluir nuevas maquinas.Se puede observar tambien que a partir de cierto umbral en el caso de 4 procesos  PACKET_SIZE=1000000 y en 8 procesos PACKET_SIZE=10000 el bandwidth llega a su máxima capacidad y luego disminuye, esto se puede deber a que se requiere hacer más particiones del paquete para su envío. 
 
 ---
 
 ### Prueba de Bandwidth entre procesos en MPI 
-```{r}
-# File name
-archivo = "bandwidth_1000pkt.csv"
-read_csv = paste(path,archivo , sep="")
-
-# Read and import csv
-bandwidth <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
-
-bandwidth= filter(latency, TYPE==" RS")
-#------------------------------------------------------------------------------#
-# Resumen estadisticos de los datos
-numSummary(bandwidth[,c("COM_TIME"), drop=FALSE], groups = bandwidth$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-
-# Grafica Boxplot general
-Boxplot(COM_TIME~NPROC, data=bandwidth, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
-
-sqldf("SELECT  COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, ROUND(AVG(COM_TIME),4) AVERAGE FROM bandwidth GROUP BY  NPROC")
-
-#------------------------------------------------------------------------------#
-```
-
-#### Experimentos de bandwidth 
-```{r}
+```{r, echo=FALSE}
 # Read and import csv
 bandwidth_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/bandwidth_experiment_10.csv")
-bandwidth_exp = filter(latency_exp, TYPE==" RS" )
+bandwidth_exp = filter(bandwidth_exp, TYPE==" SR" )
 
-resumen_bandwidth_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM bandwidth_exp  GROUP BY NPROC,PACKET_SIZE ")
+# Resumen estadísticos con PACKET_SIZE==1 por proceso
+numSummary(filter(bandwidth_exp, PACKET_SIZE==1)[,c("COM_TIME"), drop=FALSE], groups = filter(bandwidth_exp, PACKET_SIZE==1)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
-resumen_bandwidth_exp
+# Resumen estadísticos con PACKET_SIZE==10000000 por proceso
+numSummary(filter(bandwidth_exp, PACKET_SIZE==10000000)[,c("COM_TIME"), drop=FALSE], groups = filter(bandwidth_exp, PACKET_SIZE==10000000)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 
 ```
+COMENTARIO
+
+#### 
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+bandwidth = bandwidth_exp
+temp =filter(bandwidth_exp, PACKET_SIZE==10000000)
+
+# Grafica Boxplot general
+box_bandwidth = Boxplot(COM_TIME~NPROC, data=temp, id=list(method="y"),outline=FALSE, xlab="Number of Process", ylab="Time")
+```
+
+COMENTARIO BOXPLOT
+#### Experimentos de bandwidth 
+```{r, echo=FALSE}
+resumen_bandwidth_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576,6) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM bandwidth  GROUP BY NPROC,PACKET_SIZE ")
+
+resumen_bandwidth_exp
+```
+
+#### Experimentos de bandwidth
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+
+ggplot(resumen_bandwidth_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = NPROC, colour =NPROC )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  labs(x = 'Tiempo promedio de envío',
+       y = 'Tamaño del paquete')+
+  theme_minimal()
+```
+ 
+comentario
+
 
 
 ---
 
 
+---
+
 ### Prueba de Broadcast entre procesos en MPI 
-```{r}
-# File name
-archivo = "broadcast_1000pkt.csv"
-read_csv = paste(path,archivo , sep="")
 
+#### Resumen estadistico de los datos obtenidos haciendo envio uno a uno en broadcast
+```{r, echo=FALSE}
 # Read and import csv
-broadcast <- read.csv(read_csv, header=T, dec='.', sep=',', na.strings = "")
-#------------------------------------------------------------------------------#
-broadcast_0 = filter(broadcast, BCAST_TYPE==0)
+broadcast <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/broadcast_exp_new_10.csv")
 
-numSummary(broadcast_0[,c("COM_TIME"), drop=FALSE], groups = broadcast_0$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+# Envio de paquetes usando de Bcast
+broadcast_0 = filter(broadcast, BCAST_TYPE==0, TYPE == "S")
 
-# Grafía de Boxplot de Homicidios por regiones
-Boxplot(COM_TIME~NPROC, data=broadcast_0, id=list(method="y"), xlab="Number of Process", ylab="Time")
+bcast_4 = filter(broadcast_0, NPROC == 4)
+numSummary(bcast_4[,c("COM_TIME"), drop=FALSE], groups = bcast_4$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+```
+Se resumen estadistico de la ejecucion con 4 procesos se puede observar que el tiempo medio va incrementando con el tamaño del paquete, llama un poco la  atencion que en algunos casos como los de tamaño (1-5, 900-1000) los tiempos promedios de los procesos con menor tamaño son mayores en eso casos particulares esto tambien se debe a que la desviacion estandar es mayor en esto casos.
 
+```{r, echo=FALSE}
+bcast_8 = filter(broadcast_0, NPROC == 8)
+numSummary(bcast_8[,c("COM_TIME"), drop=FALSE], groups = bcast_8$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+```
+Se resumen estadistico de la ejecucion con 8 procesos vemos el mismo incremento de tiempos del caso anterior. Se puede resaltar que el uso de al menos dos computadoras para la distribucion de los procesos traen consigo mayor latencia de comunicacion.   
+
+
+#### Boxplot del tiempo promedio envio uno a uno
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+size5 = filter(broadcast_0, PACKET_SIZE == 5 )
+box_broadcast1 = Boxplot(COM_TIME~NPROC, data=broadcast_0, id=list(method="y"), xlab="Number of Process", ylab="Time")
+```
+Se compara la diferencia de tienpo por numero de procesos con tamaño 5.
+
+
+#### Resumen estadistico de los datos obtenidos usando Bcast
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+# Tomas los datos 
 broadcast_1 = filter(broadcast, BCAST_TYPE==1)
 
-numSummary(broadcast_1[,c("COM_TIME"), drop=FALSE], groups = broadcast_1$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
-
-# Grafía de Boxplot de Homicidios por regiones
-Boxplot(COM_TIME~NPROC, data=broadcast_1, id=list(method="y"), xlab="Number of Process", ylab="Time")
-
-
-sqldf("SELECT BCAST_TYPE, COUNT(DISTINCT(NODE)) MACHINES, NPROC PROCESS, MIN(COM_TIME) WORST_TIME, MAX(COM_TIME) BEST_TIME, AVG(COM_TIME) AVERAGE FROM broadcast GROUP BY BCAST_TYPE, NPROC")
-#------------------------------------------------------------------------------#
+numSummary(broadcast_1[,c("COM_TIME"), drop=FALSE], groups = broadcast_1$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
+Se puede ver como se reduce a mas de la mitad el tiempo promedio de envio usando la libreria Bcast, el tamaño del paquete influye tambien en el tiempo de los envios.
+Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
+
+#### Boxplot del tiempo promedio envio usando Bcast
+```{r, warning=FALSE,message=FALSE, echo=FALSE}
+box_broadcast1 = Boxplot(COM_TIME~NPROC, data=broadcast_1, id=list(method="y"), xlab="Number of Process", ylab="Time")
+
+```
+
 Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
 
 
-#### Experimentos de Broadcast 
-```{r}
-# Read and import csv
-broadcast_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/broadcast_experiment_10.csv")
-broadcast_exp = filter(latency_exp, TYPE==" RS" )
-
-resumen_broadcast_exp = sqldf("SELECT   PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM broadcast_exp  GROUP BY NPROC,PACKET_SIZE ")
+#### Tabla resumen 
+```{r, echo=FALSE}
+resumen_broadcast_exp = sqldf("SELECT  BCAST_TYPE, PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM broadcast_exp  GROUP BY BCAST_TYPE, NPROC,PACKET_SIZE ")
 
 resumen_broadcast_exp
 
 ```
 
+#### Grafica comparativa de tiempo de envio por tamaño del paquete distinguiendo por proceso 
+```{r, echo=FALSE}
+ggplot(resumen_broadcast_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = BCAST_TYPE, colour =BCAST_TYPE )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  labs(x = 'Tiempo promedio de envío',
+       y = 'Tamaño del paquete')+
+  theme_minimal()
+```
+
 ---
 
+---
 # Apendice: 
-
 ## Archivos de ejecución 
 
 Para la ejecución de forma automatizada y parametrizada de cada uno de los script de C se crearon 
@@ -314,4 +350,4 @@ columna vacía dado que ese dato no es requerido para ese script en particular. 
 como se está usando tipo entero (4 Bytes) se multiplica el tamaño introducido por cuatro bytes para obtener 
 la cantidad total en bytes, las medidas de tiempo usadas COM_TIME y RUNING_TIME estan expresadas en segundos.
 
-
+---
