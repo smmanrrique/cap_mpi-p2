@@ -20,6 +20,13 @@ struct Pair {
 double t, t1, t2;
 struct timeval tv;
 
+double get_clock() {
+   struct timeval tv; int ok;
+   ok = gettimeofday(&tv, (void *) 0);
+   if (ok<0) { printf("gettimeofday error");  }
+   return (tv.tv_sec * 1.0 + tv.tv_usec * 1.0E-6);
+}
+
 struct Pair get_process(int rank, int nproc) {
     struct Pair pids;
     pids.pid_src = rank%nproc;
@@ -56,28 +63,28 @@ int main( int argc, char* argv[] ) {
     if (rank < result.pid_dst) {
         MPI_Status status;       
 
-        t1 = MPI_Wtime();
+        t1 = get_clock();
         for (int i=0; i<n_packets; i++) {
             MPI_Send(send_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
         }
         MPI_Recv(&recv_ack, 1, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
-        t2 = MPI_Wtime();
+        t2 = get_clock();
         t  = (t2 - t1);
-        printf("%d, ,%d, %d,%d,, SR,%s, %u, %u, %u, %u, %f\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
+        printf("%d, ,%d, %d,%d,, SR,%s, %u, %u, %u, %u, %12.10lf\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t);
     } else  {
         MPI_Status status;
         send_ack = 9;
 
-        t1 = MPI_Wtime();
+        t1 = get_clock();
         int i = 1;
         while (i<n_packets+1) {
             MPI_Recv(recv_packets, packet_size, MPI_BYTE, result.pid_dst, result.tag_id, MPI_COMM_WORLD, &status);
             i++;
         }
         MPI_Send(&send_ack, 1, MPI_INT, result.pid_dst, result.tag_id, MPI_COMM_WORLD);
-        t2 = MPI_Wtime();
+        t2 = get_clock();
         t  = (t2 - t1);
-        printf("%d, ,%d, %d, %d,, RS, %s, %u, %u, %u, %u, %f\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
+        printf("%d, ,%d, %d, %d,, RS, %s, %u, %u, %u, %u, %12.10lf\n", experiment, nproc, packet_size, n_packets, name, rank, result.pid_src, result.pid_dst, result.tag_id, t); 
     }
     
     MPI_Finalize();

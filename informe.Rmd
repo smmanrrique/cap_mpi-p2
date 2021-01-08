@@ -4,9 +4,9 @@ author: "Shamuel Manrrique 802400 \\n
          Aldrix Marfil 794976"
 date: "08/01/2021"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 # Resumen
@@ -131,7 +131,7 @@ Se puede determinar por los resultados que el tiempo de envío y recepción del 
 
 Para visualizar mejor la diferencia de latencia entre usar 4 y 8 procesos mapeados en distintas máquinas se muestra un diagrama de caja donde se aprecia el número de procesos en relación al tiempo de latencia. A partir de 4 procesos el mapeo de procesos se lleva a cabo entre dos máquinas. Por lo que el coste de comunicación es mucho mayor, Los procesos quedan distribuidos de forma tal que las parejas están separadas en máquinas distintas.
 
-#### Boxplot del tiempo promedio por número de proceso 
+#### Gráfico de caja del tiempo promedio por número de proceso 
 ```{r, warning=FALSE,message=FALSE, echo=FALSE}
 latency = latency_exp
 
@@ -193,7 +193,6 @@ ggplot(resumen_latency_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = NPROC, co
 
 Con las pruebas realizadas se puede apreciar que tanto el tamaño del paquete y el número de máquinas en la que se ejecutan los procesos influyen en  los resultados obtenidos. El tiempo incrementa casi al doble al incluir nuevas máquinas. Se puede observar también que a partir de cierto umbral en el caso de 4 procesos  PACKET_SIZE=1000000 (1MB) y en 8 procesos PACKET_SIZE=10000 (10KB) el bandwidth llega a su máxima capacidad y luego disminuye, esto se puede deber a que se requiere hacer más particiones del paquete para su envío. 
 
----
 
 ### Prueba de Bandwidth entre procesos en MPI 
 En esta oportunidad se realizaron 10 ejecuciones del script de bandwidth. Y se emplearon variaciones de los parámetros Número de procesos (4 y 8), Tamaño del paquete enviado (1B, 10 KB, 1 MB, 10MB). Es importante recordar que acá se mide la cantidad de tiempo que tarda una ráfaga de 100 paquetes en ser enviado desde un nodo A a un nodo B. 
@@ -205,11 +204,17 @@ A continuación se mostrará el resumen estadístico de los tiempos obtenidos pa
 bandwidth_exp <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/bandwidth_experiment_10.csv")
 bandwidth_exp = filter(bandwidth_exp, TYPE==" SR" )
 
+bandwidth_exp4 = filter(bandwidth_exp, NPROC==4)
 # Resumen estadísticos con PACKET_SIZE==1 por proceso
-numSummary(filter(bandwidth_exp, PACKET_SIZE==1)[,c("COM_TIME"), drop=FALSE], groups = filter(bandwidth_exp, PACKET_SIZE==1)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+numSummary(bandwidth_exp4[,c("COM_TIME"), drop=FALSE], groups = bandwidth_exp4$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+```
 
-# Resumen estadísticos con PACKET_SIZE==10000000 por proceso
-numSummary(filter(bandwidth_exp, PACKET_SIZE==10000000)[,c("COM_TIME"), drop=FALSE], groups = filter(bandwidth_exp, PACKET_SIZE==10000000)$NPROC, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
+
+```{r, echo=FALSE}
+bandwidth_exp8 = filter(bandwidth_exp, NPROC==8)
+
+# Resumen estadísticos con PACKET_SIZE==1 por proceso
+numSummary(bandwidth_exp8[,c("COM_TIME"), drop=FALSE], groups = bandwidth_exp8$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
 
 Se puede determinar por los resultados que el tiempo de envío y recepción de la rafaga de paquetes depende del tamaño del paquete, a mayor tamaño mayor tiempo. También el número de procesos mapeados en distintas máquinas usadas para la ejecución influyen en el tiempo.  
@@ -255,9 +260,11 @@ Se puede observar que el comportamiento de latencia respecto a cuando se envía 
 
 ### Prueba de Broadcast entre procesos en MPI 
 
-#### Resumen estadístico de haciendo envíos uno a uno (4 procesos)
+### Envíos one to one
+#### Resumen estadístico (4 procesos)
 
-Se muestra una tabla resumen con los tiempos obtenidos realizando múltiples pruebas con 4 procesos. Realizando enviar uno a uno con un nodo raíz al resto de los procesos.
+Se muestra una tabla resumen con los tiempos obtenidos realizando 10  pruebas con 4 procesos donde el nodo root asignado es el cero y era el encargado de enviar mensajes a todos los demás procesos.
+
 ```{r, echo=FALSE}
 # Read and import csv
 broadcast <- read.csv("C:/Users/smmanrrique/3D Objects/unizar/cap/cap_mpi-p2/results/broadcast_exp_new_10.csv")
@@ -268,34 +275,36 @@ broadcast_0 = filter(broadcast, BCAST_TYPE==0, TYPE == "S")
 bcast_4 = filter(broadcast_0, NPROC == 4)
 numSummary(bcast_4[,c("COM_TIME"), drop=FALSE], groups = bcast_4$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
-Se resumen estadístico de la ejecución con 4 procesos se puede observar que el tiempo medio va incrementando con el tamaño del paquete, llama un poco la  atención que en algunos casos como los de tamaño (1-5, 900-1000) los tiempos promedios de los procesos con menor tamaño son mayores en eso casos particulares esto también se debe a que la desviación estándar es mayor en esto casos.
+En resumen estadístico de la ejecución con 4 procesos se puede observar que el tiempo medio va incrementando con el tamaño del paquete, la desviación estándar se mantiene  bastante alta. El valor del skewness nos indica que la distribución de la muestra es asimétrica positiva y tiene datos atípicos.
 
-#### Resumen estadístico de haciendo envios uno a uno (8 procesos)
+#### Resumen estadístico de haciendo envíos uno a uno (8 procesos)
 ```{r, echo=FALSE}
 bcast_8 = filter(broadcast_0, NPROC == 8)
 numSummary(bcast_8[,c("COM_TIME"), drop=FALSE], groups = bcast_8$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
-En resumen estadístico de la ejecución con 8 procesos vemos el mismo incremento de tiempos del caso anterior. Se puede resaltar que el uso de al menos dos computadoras para la distribución de los procesos traen consigo mayor latencia de comunicación.   
+
+En resumen estadístico de la ejecución con 8 procesos vemos el mismo incremento de tiempos del caso anterior. Se puede resaltar que existe una menor desviación y no se posee tantos datos atípicos, sin embargo el tiempo  de comunicación es mayor.
 
 
-#### Boxplot del tiempo promedio por número de procesos (PACKET_SIZE == 5)
+#### Gráfico de caja del tiempo promedio por número de procesos (PACKET_SIZE == 10000000)
 ```{r, warning=FALSE,message=FALSE, echo=FALSE}
-size5 = filter(broadcast_0, PACKET_SIZE == 5 )
+size5 = filter(broadcast_0, PACKET_SIZE == 10000000 )
 box_broadcast1 = Boxplot(COM_TIME~NPROC, data=broadcast_0, id=list(method="y"), xlab="Number of Process", ylab="Time")
 ```
-Se puede apreciar la diferencia de tiempo en los envíos al incrementar el número de procesos y máquinas involucradas.
+
+Se puede apreciar el número de máquinas en los tiempos de comunicación  al incrementar  el número de procesos y máquinas involucradas..
 
 
 
-#### Tabla resumen envió uno a uno 
+#### Tabla resumen
 ```{r, echo=FALSE}
-#broadcast_0 = filter(broadcast_0, PACKET_SIZE != 1 | PACKET_SIZE !=5 | PACKET_SIZE !=100, NPROC == 4)
-
 resumen_broadcast_exp = sqldf("SELECT  BCAST_TYPE, PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM broadcast_0 WHERE BCAST_TYPE = 0 GROUP BY BCAST_TYPE, NPROC,PACKET_SIZE ")
 
 resumen_broadcast_exp
-
 ```
+
+Además de la influencia del número de máquinas en el tiempo se puede apreciar también que tanto el bandwidth como el throughput se ve afectado considerablemente por la comunicación remota.  
+
 
 #### Gráfica comparativa de tiempo de envío por tamaño del paquete distinguiendo por proceso 
 ```{r, echo=FALSE}
@@ -306,10 +315,10 @@ ggplot(resumen_broadcast_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = NPROC, 
        x = 'Tamaño del paquete')+
   theme_minimal()
 ```
+La gráfica muestra la diferencia en tiempo de ejecutar el mismo programa con paquetes de distintos tamaños entre usando una cantidad variable de procesos.  
 
-
-
-#### Resumen estadístico de envíos usando Bcast (4 procesos)
+### Envio Bcast
+#### Resumen estadístico de envíos usando la función Bcast de MPI (para 4 procesos)
 ```{r, warning=FALSE,message=FALSE, echo=FALSE}
 # Tomas los datos 
 broadcast_1 = filter(broadcast, BCAST_TYPE==1)
@@ -317,34 +326,38 @@ broadcast_1 = filter(broadcast, BCAST_TYPE==1)
 bcast_1_4 = filter(broadcast_1, NPROC == 4)
 numSummary(bcast_1_4[,c("COM_TIME"), drop=FALSE], groups = bcast_1_4$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
-Se puede ver como se reduce a más de la mitad el tiempo promedio de envío usando la librería Bcast, el tamaño del paquete influye también en el tiempo de los envíos.
-Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
+Se observa cómo se reduce a más de la mitad el tiempo promedio de envío usando la librería Bcast, el tamaño del paquete influye también en el tiempo de los envíos. Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación a enviar uno a uno a cada uno de los procesos desde un nodo raíz.
 
-#### Resumen estadístico de envios usando Bcast (8 procesos)
+#### Resumen estadístico de envíos usando usando la función Bcast de MPI  (para 8 procesos)
 ```{r, warning=FALSE,message=FALSE, echo=FALSE}
 bcast_1_8 = filter(broadcast_1, NPROC == 8)
 numSummary(bcast_1_8[,c("COM_TIME"), drop=FALSE], groups = bcast_1_8$PACKET_SIZE, statistics=c("mean", "sd", "IQR", "quantiles", "skewness", "kurtosis"), quantiles=c(0,.25,.5,.75,1))
 ```
 
+#### Gráfico de caja del tiempo promedio de envío por número de procesos usando Bcast (tamaño de paquete 10MB)
 
-
-#### Boxplot del tiempo promedio envío  por número de procesos usando Bcast(PACKET_SIZE == 5)
 ```{r, warning=FALSE,message=FALSE, echo=FALSE}
-
-size5 = filter(broadcast_1, PACKET_SIZE == 5 )
+size5 = filter(broadcast_1, PACKET_SIZE == 10000000 )
 
 box_broadcast1 = Boxplot(COM_TIME~NPROC, data=broadcast_1, id=list(method="y"), xlab="Number of Process", ylab="Time")
 
 ```
 
 
-#### Tabla resumen Broadcast
+Según las mediciones obtenidas no hay una diferencia significativa en usar la función Bcast MPI o el envío uno a uno, al menos para menos de 8 procesos. Se aprecia en el siguiente gráfico de caja como las medias de las mediciones para cada grupo (4 y 8 procesos) son similares.
+
+#### Tabla resumen (Tiempos y Datos transmitidos)
 ```{r, echo=FALSE}
 resumen_broadcast_exp = sqldf("SELECT  BCAST_TYPE, PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM broadcast_1 GROUP BY BCAST_TYPE, NPROC,PACKET_SIZE ")
 
 resumen_broadcast_exp
-
 ```
+
+Se observan diferencias en tiempo en el orden de las diezmilésimas (cuarto decimal) para los mejores tiempos en los diferentes tamaños de paquetes. Luego, el máximo ancho de banda obtenido fue de 1875,47 MB por segundo con una transferencia promedio de datos de 1728.57. 
+
+Es importante resaltar que el ancho de banda se ve influenciado por la cantidad de procesos usados, puesto que mientras más procesos se usen va disminuyendo el ancho de banda disponible.
+
+
 
 #### Gráfica comparativa de tiempo de envío por tamaño del paquete distinguiendo por proceso 
 ```{r, echo=FALSE}
@@ -356,10 +369,43 @@ ggplot(resumen_broadcast_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = NPROC, 
   theme_minimal()
 ```
 
-Se puede concluir que usando la librería Bcast el tiempo se reduce a la mitad en comparación de hacer el envió uno a uno a cada uno de los procesos desde un nodo raíz.
+### Comparativa
 
-Observaciones: Para la ejecuciones con cuatro procesos solo se usó el tamaños de paquetes pequeños.
----
+Por los resultados obtenidos con los tiempos de (Bcast 1, one-to-one 0) y graficando para una mejor visualización de las diferencias.
+
+##### Comparativa bcast vs one to one (4 procesos)
+
+```{r, echo=FALSE}
+b4 = filter(broadcast, NPROC == 4)
+resumen_broadcast_exp = sqldf("SELECT  BCAST_TYPE, PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM b4 GROUP BY BCAST_TYPE, NPROC,PACKET_SIZE ")
+
+ggplot(resumen_broadcast_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = BCAST_TYPE, colour =BCAST_TYPE )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  labs(y = 'Tiempo promedio de envío',
+       x = 'Tamaño del paquete')+
+  theme_minimal()
+```
+
+Respecto a los tiempos de no se aprecia una mayor diferencia con cuatro procesos entre ambas métodos. Por los resultados obtenidos en particular no correspondian con lo esperado dado que se tendería creer que la implementación de MPI de Bcast debe ser más eficiente en estos casos, pero los resultados obtenidos  nos dicen todo lo contrario.
+
+
+##### Comparativa bcast vs one to one (8 procesos)
+
+```{r, echo=FALSE}
+b8 = filter(broadcast, NPROC == 8)
+resumen_broadcast_exp = sqldf("SELECT  BCAST_TYPE, PACKET_SIZE, NPROC, MIN(COM_TIME) BEST_TIME, MAX(COM_TIME) WORST_TIME, AVG(COM_TIME) AVERAGE, ROUND((PACKET_SIZE/MIN(COM_TIME))/1048576, 4) BANDWIDTH, ROUND((PACKET_SIZE/AVG(COM_TIME))/1048576, 4) THROUGHPUT  FROM b8 GROUP BY BCAST_TYPE, NPROC,PACKET_SIZE ")
+
+ggplot(resumen_broadcast_exp, aes(x=PACKET_SIZE, y=log(AVERAGE), group = BCAST_TYPE, colour =BCAST_TYPE )) + 
+  geom_line()  + 
+  geom_point( size=2, shape=21, fill="white") + 
+  labs(y = 'Tiempo promedio de envío',
+       x = 'Tamaño del paquete')+
+  theme_minimal()
+```
+
+El desempeño de la versión MPI de broadcast es bastante similar al del envío uno a uno empleando varios procesos siempre y cuando el tamaño de los paquetes sea pequeño. Por ejemplo,  en la gráfica se observa que para un paquete de 10 MB si hay una brecha en la duración del envío a todos vs el envío uno a uno a favor del Bcast de MPI. Posiblemente, esta función de MPI está pensada para sacar mayor partido al ejecutar el programa usando un mayor número  de procesos.
+
 # Apendice: 
 ## Archivos de ejecución 
 
@@ -400,6 +446,7 @@ como se está usando tipo entero (4 Bytes) se multiplica el tamaño introducido 
 la cantidad total en bytes, las medidas de tiempo usadas COM_TIME y RUNING_TIME están expresadas en segundos.
 
 ---
+
 
 
 

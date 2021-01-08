@@ -2,7 +2,7 @@
 PROGRAM="bandwidth.out"
 CSV_NAME="bandwidth_test"
 HOSTFILE="host_lab004.txt"
-PACKET_SIZES=(1 1000 1000000) # 1 byte, 1 kilobyte, 1 megabyte
+PACKET_SIZES=(1 100 1000 10000 1000000 10000000) # 1 byte, 10 kilobyte, 1 megabyte, 10 megabyte
 NUMBER_PACKETS=(100)
 NUMBER_PROCCESS=(4 8)
 NUMBER_EXPERIMENTS=10

@@ -14,7 +14,6 @@
 #endif
 
 double t, t1, t2;
-double tstart, tend, ttotal;
 struct timeval tv;
 
 double get_clock() {
@@ -45,36 +44,32 @@ int main( int argc, char* argv[] ) {
 
     void *packets = malloc(packet_size);
 
-    tstart = get_clock();
-    if(broadcast){
-        t1 = MPI_Wtime();
-        MPI_Bcast(packets, packet_size, MPI_INT, 0, MPI_COMM_WORLD);
-        t2 = MPI_Wtime();
+    if (broadcast) {
+        t1 = get_clock();
+        MPI_Bcast(packets, packet_size, MPI_BYTE, 0, MPI_COMM_WORLD);
+        t2 = get_clock();
         t  = (t2 - t1);
-        printf("%d, %d, %d, %d, %d,,,, %s, %u,,,, %f", experiment, broadcast, nproc, packet_size, name, rank, t);
+        printf("%d, %d, %d, %d,,,, %s, %u,,,, %12.10lf,\n", experiment, broadcast, nproc, packet_size, name, rank, t);
     } else {
         MPI_Status status;
 
-        if(rank == 0) {     
-            t1 = MPI_Wtime();
-            for (int i=0; i<nproc; i++) {
-                MPI_Send(packets, packet_size, MPI_INT, i, 0, MPI_COMM_WORLD);
+        if(rank == 0) {            
+            t1 = get_clock();
+            for (int i=1; i<nproc; i++) {
+                MPI_Send(packets, packet_size, MPI_BYTE, i, 0, MPI_COMM_WORLD);
             }
-            t2 = MPI_Wtime();
+            t2 = get_clock();
             t  = (t2 - t1);
-            printf("%d, %d, %d, %d, %d,,,, %s, %u,,,, %f", experiment, broadcast, nproc, packet_size, name, rank, t); 
+            printf("%d, %d, %d, %d,,,S, %s, %u,,,, %12.10lf,\n", experiment, broadcast, nproc, packet_size, name, rank, t); 
         } else {
-            t1 = MPI_Wtime();
-            MPI_Recv(packets, packet_size, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-            t2 = MPI_Wtime();
+            t1 = get_clock();
+            MPI_Recv(packets, packet_size, MPI_BYTE, 0, 0, MPI_COMM_WORLD, &status);
+            t2 = get_clock();
             t  = (t2 - t1);  
-            printf("%d %d, %d, %d,,,, %s, %u,,,, %f", experiment, broadcast, nproc, packet_size, name, rank, t);           
+            printf("%d, %d, %d, %d,,,R, %s, %u,,,, %12.10lf,\n", experiment, broadcast, nproc, packet_size, name, rank, t);           
         }        
     }
-    tend   = get_clock();
-	ttotal = (tend - tstart);
-    printf(",%12.10lf\n",ttotal);
-
+    free(packets);
     MPI_Finalize();
     return 0;
 }
